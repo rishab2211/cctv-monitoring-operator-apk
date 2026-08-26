@@ -16,7 +16,9 @@ import {
   Chart01Icon,
   ChevronRightIcon,
   TimelineIcon,
+  CloudUploadIcon,
 } from '@hugeicons/core-free-icons';
+import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
@@ -56,6 +58,9 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
   // Close Incident Modal
   const [closeModalVisible, setCloseModalVisible] = useState(false);
   const [closeNotes, setCloseNotes] = useState('');
+
+  // Media upload
+  const [mediaLoading, setMediaLoading] = useState(false);
 
   const loadIncident = async () => {
     try {
@@ -130,6 +135,37 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
       );
     } catch (e: any) {
       Alert.alert('Error', getApiErrorMessage(e, 'Failed to generate incident summary report.'));
+    }
+  };
+
+  const handleUploadMedia = async () => {
+    try {
+      const results = await pick({
+        allowMultiSelection: true,
+        type: [types.allFiles],
+      });
+      const selected = results.slice(0, 10);
+      
+      const formData = new FormData();
+      selected.forEach((file) => {
+        formData.append('media', {
+          uri: file.uri,
+          type: file.type || 'application/octet-stream',
+          name: file.name || 'media_file',
+        } as any);
+      });
+
+      setMediaLoading(true);
+      await IncidentApi.uploadMedia(incidentId, formData);
+      
+      Alert.alert('Success', 'Media uploaded successfully');
+      loadIncident(); // Refresh
+    } catch (err: any) {
+      if (!(isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED)) {
+        Alert.alert('Error', getApiErrorMessage(err, 'Failed to upload media.'));
+      }
+    } finally {
+      setMediaLoading(false);
     }
   };
 
@@ -224,6 +260,15 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
             style={styles.subBtn}
           />
           <Button
+            title="Upload Media"
+            variant="outline"
+            size="small"
+            loading={mediaLoading}
+            icon={<AppIcon icon={CloudUploadIcon} size="xs" color={Colors.primaryLight} />}
+            onPress={handleUploadMedia}
+            style={styles.subBtn}
+          />
+          <Button
             title="View Timeline"
             variant="secondary"
             size="small"
@@ -282,21 +327,23 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
           <View style={styles.actionContainer}>
             {incident.status === 'open' && (
               <Button
-                title="Start Investigation"
+                title={isAssignedToMe ? "Start Investigation" : "Assign to Me to Investigate"}
                 variant="primary"
                 loading={actionLoading}
                 onPress={() => handleStatusUpdate('investigating')}
                 style={styles.actionBtn}
+                disabled={!isAssignedToMe}
               />
             )}
 
             {incident.status === 'investigating' && (
               <Button
-                title="Mark as Resolved"
+                title={isAssignedToMe ? "Mark as Resolved" : "Assign to Me to Resolve"}
                 variant="primary"
                 loading={actionLoading}
                 onPress={() => handleStatusUpdate('resolved')}
                 style={styles.actionBtn}
+                disabled={!isAssignedToMe}
               />
             )}
 

@@ -15,6 +15,8 @@ import { AppIcon } from '../../components/common/AppIcon';
 import { TalkbackApi } from '../../api/endpoints/talkback.api';
 import { formatDuration } from '../../utils/date';
 import { getApiErrorMessage } from '../../utils/error';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 interface TalkbackActiveOverlayProps {
   navigation: any;
@@ -31,6 +33,7 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
   route,
 }) => {
   const { cameraId, cameraName } = route.params;
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -81,7 +84,7 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
 
         // Check capabilities & busy state
         const status = await TalkbackApi.getStatus(cameraId);
-        if (status.isActive) {
+        if (status.isActive && status.session?.operatorId !== user?._id) {
           throw new Error('Camera is already in an active talkback session with another operator.');
         }
 

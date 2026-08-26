@@ -15,8 +15,10 @@ import {
   CameraVideoIcon,
   File01Icon,
   LockIcon,
+  Shield01Icon,
   Wrench01Icon,
 } from '@hugeicons/core-free-icons';
+import { pick, types, isErrorWithCode, errorCodes, DocumentPickerResponse } from '@react-native-documents/picker';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Button } from '../../components/common/Button';
@@ -48,7 +50,27 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
   const [severity, setSeverity] = useState<IncidentSeverity>('medium');
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(prefilledCam || null);
   const [cameras, setCameras] = useState<Camera[]>([]);
+  const [attachments, setAttachments] = useState<DocumentPickerResponse[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const handlePickAttachments = async () => {
+    try {
+      const results = await pick({
+        allowMultiSelection: true,
+        type: [types.allFiles],
+      });
+      const newAttachments = [...attachments, ...results].slice(0, 5);
+      setAttachments(newAttachments);
+    } catch (err) {
+      if (!(isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED)) {
+        Alert.alert('Error', 'Failed to pick files');
+      }
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     OperatorApi.getAssignedCameras()
@@ -98,6 +120,13 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
       if (selectedCameraId) {
         formData.append('cameraId', selectedCameraId);
       }
+      attachments.forEach((file) => {
+        formData.append('attachments', {
+          uri: file.uri,
+          type: file.type || 'application/octet-stream',
+          name: file.name || 'attachment',
+        } as any);
+      });
 
       await IncidentApi.createIncident(formData);
 
@@ -121,7 +150,8 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
   const incidentTypes: Array<{ key: IncidentType; label: string; icon: any }> = [
     { key: 'theft', label: 'Theft', icon: LockIcon },
     { key: 'vandalism', label: 'Vandalism', icon: AlertDiamondIcon },
-    { key: 'technical_issue', label: 'Technical Issue', icon: Wrench01Icon },
+    { key: 'safety', label: 'Safety', icon: Shield01Icon },
+    { key: 'maintenance', label: 'Maintenance', icon: Wrench01Icon },
     { key: 'other', label: 'Other', icon: File01Icon },
   ];
 
@@ -258,6 +288,30 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
             })}
           </ScrollView>
 
+          {/* Attachments */}
+          <View style={[styles.labelRow, { marginTop: 16 }]}>
+            <Text style={styles.label}>Attachments (Max 5)</Text>
+            <Text style={styles.charCount}>{attachments.length}/5</Text>
+          </View>
+          <Button
+            title="Select Files"
+            variant="outline"
+            icon={<AppIcon icon={File01Icon} size="xs" color={Colors.primaryLight} />}
+            onPress={handlePickAttachments}
+            disabled={attachments.length >= 5}
+            style={{ marginBottom: 12 }}
+          />
+          {attachments.map((file, idx) => (
+            <View key={idx} style={styles.attachmentRow}>
+              <Text style={styles.attachmentName} numberOfLines={1}>
+                {file.name}
+              </Text>
+              <TouchableOpacity onPress={() => removeAttachment(idx)}>
+                <Text style={styles.removeText}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+
           <Button
             title="Submit Incident Report"
             loading={loading}
@@ -360,5 +414,24 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 24,
+  },
+  attachmentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  attachmentName: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.textPrimary,
+    marginRight: 10,
+  },
+  removeText: {
+    fontSize: 12,
+    color: Colors.critical,
+    fontWeight: '600',
   },
 });
