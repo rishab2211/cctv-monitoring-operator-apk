@@ -21,20 +21,33 @@ import { AppIcon } from '../../components/common/AppIcon';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import { OperatorReportsResponse, ReportShiftItem } from '../../types/reports.types';
 import { formatDateTime, formatDuration } from '../../utils/date';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 interface ReportsScreenProps {
   navigation: any;
 }
 
 export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
+  const { user } = useSelector((state: RootState) => state.auth);
   const [reports, setReports] = useState<OperatorReportsResponse | null>(null);
+  const [allTimeKpis, setAllTimeKpis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadReports = async () => {
     try {
-      const data = await OperatorApi.getReports();
-      setReports(data);
+      const [reportsData, kpisData] = await Promise.all([
+        OperatorApi.getReports(),
+        user?._id 
+          ? OperatorApi.getPerformanceKpis(user._id).catch((err) => {
+              console.warn('[Reports] Error loading KPIs:', err);
+              return null;
+            })
+          : Promise.resolve(null),
+      ]);
+      setReports(reportsData);
+      setAllTimeKpis(kpisData);
     } catch (e) {
       console.warn('[Reports] Error loading reports:', e);
     } finally {
@@ -111,7 +124,35 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
       >
-        {/* KPI Cards Row */}
+        {allTimeKpis && (
+          <View style={styles.allTimeContainer}>
+            <Text style={styles.sectionTitle}>All-Time Performance KPIs</Text>
+            <View style={styles.kpiGrid}>
+              <View style={styles.kpiCard}>
+                <AppIcon icon={Clock01Icon} size="md" color={Colors.primaryLight} />
+                <Text style={styles.kpiValue}>{allTimeKpis.totalShifts ?? 0}</Text>
+                <Text style={styles.kpiLabel}>Total Shifts</Text>
+              </View>
+              <View style={styles.kpiCard}>
+                <AppIcon icon={ClipboardIcon} size="md" color={Colors.online} />
+                <Text style={styles.kpiValue}>{allTimeKpis.totalIncidents ?? 0}</Text>
+                <Text style={styles.kpiLabel}>Incidents</Text>
+              </View>
+              <View style={styles.kpiCard}>
+                <AppIcon icon={SirenIcon} size="md" color={Colors.critical} />
+                <Text style={styles.kpiValue}>{allTimeKpis.totalSos ?? 0}</Text>
+                <Text style={styles.kpiLabel}>SOS Handled</Text>
+              </View>
+              <View style={styles.kpiCard}>
+                <AppIcon icon={Analytics01Icon} size="md" color={Colors.warning} />
+                <Text style={styles.kpiValue}>{allTimeKpis.rating ?? 'N/A'}</Text>
+                <Text style={styles.kpiLabel}>Operator Rating</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Last 30 Shifts Summary</Text>
         <View style={styles.kpiGrid}>
           <View style={styles.kpiCard}>
             <AppIcon icon={Clock01Icon} size="md" color={Colors.primaryLight} />
@@ -170,6 +211,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+  },
+  allTimeContainer: {
+    marginBottom: 8,
   },
   kpiGrid: {
     flexDirection: 'row',

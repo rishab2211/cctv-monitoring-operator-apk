@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   BellIcon,
@@ -28,7 +31,7 @@ import { AppIcon, IconSvgElement } from '../../components/common/AppIcon';
 import { AuthApi } from '../../api/endpoints/auth.api';
 import { StorageService } from '../../services/storage.service';
 import { socketService } from '../../services/socket.service';
-import { logout } from '../../store/slices/authSlice';
+import { logout, setUser } from '../../store/slices/authSlice';
 
 interface ProfileScreenProps {
   navigation: any;
@@ -37,6 +40,7 @@ interface ProfileScreenProps {
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user, franchiseName } = useSelector((state: RootState) => state.auth);
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to end your operator session and sign out?', [
@@ -52,6 +56,37 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         },
       },
     ]);
+  };
+
+  const handleAvatarUpload = async () => {
+    try {
+      const results = await pick({
+        type: [types.images],
+        allowMultiSelection: false,
+      });
+      const result = results[0];
+      
+      const formData = new FormData();
+      formData.append('avatar', {
+        uri: result.uri,
+        type: result.type || 'image/jpeg',
+        name: result.name || 'avatar.jpg',
+      } as any);
+
+      setAvatarLoading(true);
+      const newAvatarUrl = await AuthApi.uploadAvatar(formData);
+      
+      if (user) {
+        dispatch(setUser({ ...user, avatar: newAvatarUrl }));
+      }
+      Alert.alert('Success', 'Profile picture updated successfully.');
+    } catch (err: any) {
+      if (!(isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED)) {
+        Alert.alert('Upload Error', err.response?.data?.message || 'Could not upload avatar.');
+      }
+    } finally {
+      setAvatarLoading(false);
+    }
   };
 
   const renderSettingItem = (
@@ -80,17 +115,23 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* User Card */}
         <Card variant="elevated" style={styles.userCard}>
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarInitials}>
-              {user?.name
-                ? user.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .toUpperCase()
-                : 'OP'}
-            </Text>
-          </View>
+          <TouchableOpacity activeOpacity={0.8} onPress={handleAvatarUpload} style={styles.avatarPlaceholder} disabled={avatarLoading}>
+            {avatarLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : user?.avatar ? (
+              <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarInitials}>
+                {user?.name
+                  ? user.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()
+                  : 'OP'}
+              </Text>
+            )}
+          </TouchableOpacity>
 
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{user?.name || 'Operator'}</Text>
@@ -176,6 +217,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarInitials: {
     fontSize: 22,

@@ -7,6 +7,7 @@ import { RootState } from '../store';
 import { Colors } from '../theme/colors';
 import { StorageService } from '../services/storage.service';
 import { socketService } from '../services/socket.service';
+import { fcmService } from '../services/fcm.service';
 import { setOnUnauthorizedCallback } from '../api/client';
 import { loginSuccess, logout, setFranchiseName } from '../store/slices/authSlice';
 import { AuthApi } from '../api/endpoints/auth.api';
@@ -58,9 +59,10 @@ export const RootNavigator: React.FC = () => {
           if (profile && profile.role === 'operator') {
             dispatch(loginSuccess({ user: profile }));
 
-            // Connect socket
+            // Connect socket & initialize push notifications
             const franchiseId = profile.operatorDetails?.assignedFranchise;
             await socketService.connect(profile._id, franchiseId);
+            fcmService.init().catch((e) => console.log('FCM init err:', e));
 
             // Fetch franchise name if present
             if (franchiseId) {

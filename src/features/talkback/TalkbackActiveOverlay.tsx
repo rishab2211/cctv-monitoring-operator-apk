@@ -84,7 +84,12 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
 
         // Check capabilities & busy state
         const status = await TalkbackApi.getStatus(cameraId);
-        if (status.isActive && status.session?.operatorId !== user?._id) {
+        const sessionOperatorId =
+          typeof status.session?.operatorId === 'object' && status.session?.operatorId !== null
+            ? status.session.operatorId._id
+            : status.session?.operatorId;
+
+        if (status.isActive && sessionOperatorId !== user?._id) {
           throw new Error('Camera is already in an active talkback session with another operator.');
         }
 
@@ -145,7 +150,7 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
         pcRef.current = null;
       }
     };
-  }, [cameraId, navigation]);
+  }, [cameraId, navigation, user?._id]);
 
   const handleToggleMute = () => {
     if (localStreamRef.current) {
