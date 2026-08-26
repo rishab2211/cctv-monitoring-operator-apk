@@ -1,0 +1,587 @@
+{
+  "info": {
+    "name": "Role & Permission Management Module Postman Collection",
+    "description": "Complete, audited Role & Permission Management Module Postman Collection covering permission seeding inspection, role CRUD, single role retrieval, permission assignment, user role transitions, and RBAC guards per role_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "/permissions (List All Permissions)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "permissions"
+              ]
+            },
+            "description": "List all 33 seeded system permissions grouped by resource (super_admin only)."
+          }
+        },
+        {
+          "name": "/permissions (Create Custom Permission)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.permission) {",
+                  "    pm.environment.set(\"permissionId\", jsonData.data.permission._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"reports:export\",\n  \"resource\": \"reports\",\n  \"action\": \"export\",\n  \"description\": \"Export analytics data as CSV or PDF\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "permissions"
+              ]
+            },
+            "description": "Create a new custom permission resource:action (super_admin only)."
+          }
+        },
+        {
+          "name": "[EC-1] Permissions called by non-super_admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "admin_token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "permissions"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Insufficient permissions."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles CRUD",
+      "item": [
+        {
+          "name": "/roles (List All Roles)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.roles) {",
+                  "    var adminRole = jsonData.data.roles.find(function(r) { return r.name === 'admin'; });",
+                  "    if (adminRole) pm.environment.set('adminRoleId', adminRole._id);",
+                  "    var custRole = jsonData.data.roles.find(function(r) { return r.name === 'customer'; });",
+                  "    if (custRole) pm.environment.set('customerRoleId', custRole._id);",
+                  "    var franchiseRole = jsonData.data.roles.find(function(r) { return r.name === 'franchise'; });",
+                  "    if (franchiseRole) pm.environment.set('franchiseRoleId', franchiseRole._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "List all 7 system roles and custom roles (super_admin only)."
+          }
+        },
+        {
+          "name": "/roles/:id (Get Single Role by ID)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{adminRoleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{adminRoleId}}"
+              ]
+            },
+            "description": "Get detailed role metadata and assigned permission keys by role ID."
+          }
+        },
+        {
+          "name": "/roles/:id/permissions (Get Role Permissions Grouped)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{adminRoleId}}/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{adminRoleId}}",
+                "permissions"
+              ]
+            },
+            "description": "Get role permissions grouped by resource category."
+          }
+        },
+        {
+          "name": "/roles (Create Custom Role)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.role) {",
+                  "    pm.environment.set(\"customRoleId\", jsonData.data.role._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"viewer\",\n  \"displayName\": \"Read-Only Viewer\",\n  \"description\": \"Can view cameras, alerts, and recordings but cannot modify anything\",\n  \"permissions\": [\n    \"cameras:read\",\n    \"alerts:read\",\n    \"recordings:read\",\n    \"streams:view\",\n    \"notifications:read\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "Create a custom user role with a specific permission subset."
+          }
+        },
+        {
+          "name": "/roles/:id (Update Role Metadata)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Read-Only Viewer (Updated)\",\n  \"description\": \"View-only access to monitoring dashboards\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{customRoleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{customRoleId}}"
+              ]
+            },
+            "description": "Update role display name and description."
+          }
+        },
+        {
+          "name": "/roles/:id/permissions (Replace Permissions)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    \"cameras:read\",\n    \"alerts:read\",\n    \"alerts:write\",\n    \"recordings:read\",\n    \"streams:view\",\n    \"notifications:read\",\n    \"incidents:read\"\n  ],\n  \"replace\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{customRoleId}}/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{customRoleId}}",
+                "permissions"
+              ]
+            },
+            "description": "Update role permissions in Replace mode (overwriting existing permissions)."
+          }
+        },
+        {
+          "name": "/roles/:id/permissions (Merge Permissions)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    \"franchises:read\"\n  ],\n  \"replace\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{customRoleId}}/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{customRoleId}}",
+                "permissions"
+              ]
+            },
+            "description": "Update role permissions in Merge mode (appending to existing permissions)."
+          }
+        },
+        {
+          "name": "/roles/:id (Delete Custom Role)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{customRoleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{customRoleId}}"
+              ]
+            },
+            "description": "Delete custom role (super_admin only)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Role Assignment",
+      "item": [
+        {
+          "name": "/users/:id/roles (Assign Role to User)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"franchise\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{operatorId}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{operatorId}}",
+                "roles"
+              ]
+            },
+            "description": "Assign a new system or custom role to a user."
+          }
+        },
+        {
+          "name": "/users/:id/roles/:roleId (Remove Role / Revert to Customer)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{operatorId}}/roles/{{franchiseRoleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{operatorId}}",
+                "roles",
+                "{{franchiseRoleId}}"
+              ]
+            },
+            "description": "Remove specific role from user and revert their role back to customer."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Edge Cases & Guards",
+      "item": [
+        {
+          "name": "[EC-1] Attempt to delete system role (admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{adminRoleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{adminRoleId}}"
+              ]
+            },
+            "description": "Should return 403 Forbidden: System role cannot be deleted."
+          }
+        },
+        {
+          "name": "[EC-2] Duplicate role name",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"admin\",\n  \"displayName\": \"Duplicate Admin\",\n  \"description\": \"Duplicate test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "Should return 409 Conflict: A role with this name already exists."
+          }
+        },
+        {
+          "name": "[EC-3] Role with invalid permission key",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"badrole\",\n  \"displayName\": \"Bad Role\",\n  \"permissions\": [\n    \"nonexistent:action\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "Should return 400 Bad Request: Invalid permission keys."
+          }
+        }
+      ]
+    }
+  ]
+}

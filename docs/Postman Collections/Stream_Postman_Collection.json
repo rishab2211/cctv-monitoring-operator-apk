@@ -1,0 +1,414 @@
+{
+  "info": {
+    "name": "Streaming Module Postman Collection",
+    "description": "Complete, audited Streaming Module Postman Collection covering all 9 endpoints including WebRTC signaling (WHEP offer & answer), fresh token generation, active session tracking, stream lifecycle controls, subscription gating, and MediaMTX auth webhooks per stream_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Stream Session Lifecycle",
+      "item": [
+        {
+          "name": "/streams/start (Start Stream Session)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data) {",
+                  "    pm.environment.set(\"streamToken\", jsonData.data.streamToken);",
+                  "    pm.environment.set(\"streamSessionId\", jsonData.data.sessionId);",
+                  "    pm.environment.set(\"webrtcUrl\", jsonData.data.webrtcUrl);",
+                  "    pm.environment.set(\"streamPathName\", jsonData.data.pathName);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/streams/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "start"
+              ]
+            },
+            "description": "Start live stream session, initialize MediaMTX path, and generate 24h streamToken (Operator, Customer with active subscription, Admin)."
+          }
+        },
+        {
+          "name": "[EC-1] Customer without active subscription",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "customer_inactive_sub_token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/streams/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "start"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Active subscription required to view camera streams."
+          }
+        },
+        {
+          "name": "[EC-2] Operator NOT assigned to camera",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "unassigned_operator_token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/streams/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "start"
+              ]
+            },
+            "description": "Should return 403 Forbidden: You are not assigned to monitor this camera."
+          }
+        },
+        {
+          "name": "/streams/stop (Stop Stream Session)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\",\n  \"sessionId\": \"{{streamSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/streams/stop",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "stop"
+              ]
+            },
+            "description": "Stop live stream session and clean up viewer tracking."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Token & Status Operations",
+      "item": [
+        {
+          "name": "/streams/:cameraId/token (Get Fresh Stream Token)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/streams/{{cameraId}}/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "{{cameraId}}",
+                "token"
+              ]
+            },
+            "description": "Obtain fresh 24h stream token for an accessible camera without generating duplicate session rows."
+          }
+        },
+        {
+          "name": "/streams/:cameraId/status (Get Stream Status & Viewers)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/streams/{{cameraId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "{{cameraId}}",
+                "status"
+              ]
+            },
+            "description": "Get real-time stream status, active viewer count, and MediaMTX pathway health."
+          }
+        },
+        {
+          "name": "/streams/active (List Active Sessions)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/streams/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "active"
+              ]
+            },
+            "description": "List currently active stream sessions with multi-tenant scoping."
+          }
+        }
+      ]
+    },
+    {
+      "name": "WebRTC Signaling (WHEP)",
+      "item": [
+        {
+          "name": "/streams/:cameraId/webrtc/offer (WHEP Offer Relay)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sdp\": \"v=0\\r\\no=- 8857152017949720529 2 IN IP4 127.0.0.1\\r\\ns=-\\r\\nt=0 0\\r\\na=group:BUNDLE 0\\r\\n...\",\n  \"type\": \"offer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/streams/{{cameraId}}/webrtc/offer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "{{cameraId}}",
+                "webrtc",
+                "offer"
+              ]
+            },
+            "description": "Relays WebRTC SDP offer to MediaMTX using the WHEP protocol and returns SDP answer."
+          }
+        },
+        {
+          "name": "/streams/:cameraId/webrtc/answer (WebRTC Answer Relay)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sdp\": \"v=0\\r\\no=- 12345678 2 IN IP4 127.0.0.1\\r\\n...\",\n  \"type\": \"answer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/streams/{{cameraId}}/webrtc/answer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "{{cameraId}}",
+                "webrtc",
+                "answer"
+              ]
+            },
+            "description": "Relays WebRTC SDP answer back to stream session signaling."
+          }
+        },
+        {
+          "name": "/streams/:cameraId/ice-candidates (Get ICE Candidates Info)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/streams/{{cameraId}}/ice-candidates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "{{cameraId}}",
+                "ice-candidates"
+              ]
+            },
+            "description": "Get WHEP endpoint URLs and ICE negotiation protocol guidelines."
+          }
+        }
+      ]
+    },
+    {
+      "name": "MediaMTX Webhook",
+      "item": [
+        {
+          "name": "/streams/auth (MediaMTX Auth Webhook)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Mediamtx-Secret",
+                "value": "{{systemKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": \"{{streamToken}}\",\n  \"password\": \"\",\n  \"ip\": \"127.0.0.1\",\n  \"action\": \"read\",\n  \"path\": \"{{streamPathName}}\",\n  \"protocol\": \"webrtc\",\n  \"id\": \"session-id-xyz\",\n  \"query\": \"token={{streamToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/streams/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "streams",
+                "auth"
+              ]
+            },
+            "description": "MediaMTX authentication webhook called before permitting streaming client connections."
+          }
+        }
+      ]
+    }
+  ]
+}

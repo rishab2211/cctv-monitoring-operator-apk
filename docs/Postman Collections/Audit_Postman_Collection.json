@@ -1,0 +1,261 @@
+{
+  "info": {
+    "name": "Audit & Activity Logs Module Postman Collection",
+    "description": "Complete, audited Audit & Activity Logs Module Postman Collection covering Part A: Administrative Audit Logs (/audit-logs), Part B: User Operational Activity Logs (/activity-logs), and RBAC restriction guards per audit_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Part A: Administrative Audit Logs (/audit-logs)",
+      "item": [
+        {
+          "name": "/audit-logs (List System Audit Logs)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.logs && jsonData.data.logs.length > 0) {",
+                  "    pm.environment.set(\"auditLogId\", jsonData.data.logs[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/audit-logs?page=1&limit=20&action=USER_UPDATED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "action",
+                  "value": "USER_UPDATED"
+                }
+              ]
+            },
+            "description": "List administrative mutations (role assignments, suspensions, deletions) (Admin only)."
+          }
+        },
+        {
+          "name": "/audit-logs/:id (Get Audit Log Details)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/audit-logs/{{auditLogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit-logs",
+                "{{auditLogId}}"
+              ]
+            },
+            "description": "Get full audit trail document with actor info, IP address, and changed details."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part B: User Activity Logs (/activity-logs)",
+      "item": [
+        {
+          "name": "/activity-logs (List System-Wide Activity Logs)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/activity-logs?page=1&limit=20&action=USER_LOGIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activity-logs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "action",
+                  "value": "USER_LOGIN"
+                }
+              ]
+            },
+            "description": "List day-to-day user operational events across the platform (Admin only)."
+          }
+        },
+        {
+          "name": "/activity-logs/user/:userId (List Single User Activity Logs)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/activity-logs/user/{{userId}}?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activity-logs",
+                "user",
+                "{{userId}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Retrieve chronological activity timeline for a specific user ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part C: RBAC Access Control Guards",
+      "item": [
+        {
+          "name": "[EC-1] Operator Accessing Audit Logs (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/audit-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit-logs"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Permission denied. Required: audit:read."
+          }
+        },
+        {
+          "name": "[EC-2] Customer Accessing Activity Logs (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/activity-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activity-logs"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Permission denied. Required: audit:read."
+          }
+        },
+        {
+          "name": "[EC-3] Franchise Admin Accessing Audit Logs (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "franchise_admin_token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/audit-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit-logs"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Permission denied. Required: audit:read."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,510 @@
+{
+  "info": {
+    "name": "Alert Engine Module Postman Collection",
+    "description": "Complete, audited Alert Engine Module Postman Collection covering all 12 REST endpoints including manual & AI alert triggers, triage lifecycle (acknowledge, escalate, resolve), verification, camera history, rule configurations, and global stats per alert_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Alert Lifecycle & Triage",
+      "item": [
+        {
+          "name": "/alerts (Create Alert - Manual/AI)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.alert) {",
+                  "    pm.environment.set(\"alertId\", jsonData.data.alert._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\",\n  \"type\": \"motion\",\n  \"priority\": \"high\",\n  \"description\": \"Suspicious movement near the back perimeter gate\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ]
+            },
+            "description": "Create alert manually or via AI ingestion webhook."
+          }
+        },
+        {
+          "name": "[EC-1] Invalid Camera ID format",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"123\",\n  \"type\": \"motion\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ]
+            },
+            "description": "Should return 400 Bad Request."
+          }
+        },
+        {
+          "name": "[EC-2] Unauthorized Camera Access",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "unassigned_operator_token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\",\n  \"type\": \"motion\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ]
+            },
+            "description": "Should return 403 Forbidden: You do not have access to this camera."
+          }
+        },
+        {
+          "name": "/alerts/:id/acknowledge (Acknowledge Alert)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{{alertId}}/acknowledge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "{{alertId}}",
+                "acknowledge"
+              ]
+            },
+            "description": "Acknowledge alert and mark status as acknowledged."
+          }
+        },
+        {
+          "name": "/alerts/:id/escalate (Escalate Alert)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{{alertId}}/escalate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "{{alertId}}",
+                "escalate"
+              ]
+            },
+            "description": "Escalate alert to supervisors and priority response queues."
+          }
+        },
+        {
+          "name": "/alerts/:id/resolve (Resolve Alert)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolutionNotes\": \"Checked camera feed, it was just a stray dog. False alarm.\",\n  \"isVerified\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{{alertId}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "{{alertId}}",
+                "resolve"
+              ]
+            },
+            "description": "Resolve alert and log closing notes."
+          }
+        },
+        {
+          "name": "/alerts/:id/verify (Verify Alert - True/False Alarm)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isVerified\": true,\n  \"notes\": \"Verified visually, unauthorized individual confirmed on premises.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{{alertId}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "{{alertId}}",
+                "verify"
+              ]
+            },
+            "description": "Formally verify whether the alert was a genuine security breach."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alert Listings & Stats",
+      "item": [
+        {
+          "name": "/alerts (List All Alerts with Filters)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/alerts?page=1&limit=10&status=new&priority=high&type=motion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "new"
+                },
+                {
+                  "key": "priority",
+                  "value": "high"
+                },
+                {
+                  "key": "type",
+                  "value": "motion"
+                }
+              ]
+            },
+            "description": "List alerts with pagination and filter criteria."
+          }
+        },
+        {
+          "name": "/alerts/pending (List Pending Alerts)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/alerts/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "pending"
+              ]
+            },
+            "description": "List all new and acknowledged alerts requiring operator attention."
+          }
+        },
+        {
+          "name": "/alerts/:id (Get Alert Details)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{{alertId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "{{alertId}}"
+              ]
+            },
+            "description": "Get full alert document with camera details and audit timeline."
+          }
+        },
+        {
+          "name": "/alerts/:cameraId/history (Camera Alert History)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{{cameraId}}/history?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "{{cameraId}}",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Retrieve chronological alert history specifically for a single camera."
+          }
+        },
+        {
+          "name": "/alerts/stats (Global Alert Stats)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/alerts/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "stats"
+              ]
+            },
+            "description": "Get system-wide aggregated alert counts by status and severity."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alert Rules & Thresholds",
+      "item": [
+        {
+          "name": "/alerts/rules (Configure Camera Alert Rules)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\",\n  \"rules\": {\n    \"motionSensitivity\": \"high\",\n    \"alertThreshold\": 5,\n    \"timeWindow\": \"22:00-06:00\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/alerts/rules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "rules"
+              ]
+            },
+            "description": "Configure detection sensitivity and alert threshold rules for a camera."
+          }
+        },
+        {
+          "name": "/alerts/rules/:cameraId (Get Camera Alert Rules)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/alerts/rules/{{cameraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "rules",
+                "{{cameraId}}"
+              ]
+            },
+            "description": "Get active detection rules for a specific camera."
+          }
+        }
+      ]
+    }
+  ]
+}

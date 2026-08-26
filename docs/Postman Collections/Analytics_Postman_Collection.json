@@ -1,0 +1,311 @@
+{
+  "info": {
+    "name": "Analytics & Reports Module Postman Collection",
+    "description": "Complete, audited Analytics & Reports Module Postman Collection covering all 8 analytics endpoints including main dashboard summaries, alert distributions, camera uptime, operator rankings, revenue trends, subscription breakdowns, incident metrics, franchise comparisons, and RBAC guards per analytics_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Platform Performance & Operational Analytics",
+      "item": [
+        {
+          "name": "/analytics/dashboard (Main Dashboard Summary)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "dashboard"
+              ]
+            },
+            "description": "High-level KPI metrics summary across users, cameras, active incidents, and total revenue."
+          }
+        },
+        {
+          "name": "/analytics/alerts (Alert Analytics & Priority Breakdown)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "alerts"
+              ]
+            },
+            "description": "Aggregated alert distribution counts grouped by status, priority, and detection type."
+          }
+        },
+        {
+          "name": "/analytics/cameras (Camera Status Distribution & Uptime)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/cameras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "cameras"
+              ]
+            },
+            "description": "Camera fleet breakdown grouped by online, offline, maintenance status, and uptime percentage."
+          }
+        },
+        {
+          "name": "/analytics/operators (Operator Performance & Rankings)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/operators",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "operators"
+              ]
+            },
+            "description": "Operator productivity leaderboard tracking shifts worked, incidents resolved, SOS responses, and avg resolution times."
+          }
+        },
+        {
+          "name": "/analytics/incidents (Incident Resolution Statistics)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/incidents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "incidents"
+              ]
+            },
+            "description": "Incident volume breakdown by category (theft, safety, vandalism), severity, and investigation resolution status."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financial & Business Analytics",
+      "item": [
+        {
+          "name": "/analytics/revenue (Revenue Analytics & Monthly Trends)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/revenue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "revenue"
+              ]
+            },
+            "description": "Monthly gross revenue metrics and subscription collections."
+          }
+        },
+        {
+          "name": "/analytics/subscriptions (Subscription Growth & Plan Breakdown)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "subscriptions"
+              ]
+            },
+            "description": "Customer subscription distribution grouped by monitoring plan tier and payment status."
+          }
+        },
+        {
+          "name": "/analytics/franchises (Franchise Performance Comparison)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/franchises",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "franchises"
+              ]
+            },
+            "description": "Comparative regional performance comparing customer counts, cameras managed, and monthly gross revenue."
+          }
+        }
+      ]
+    },
+    {
+      "name": "RBAC Guards & Negative Tests",
+      "item": [
+        {
+          "name": "[EC-1] Customer Calling Analytics Dashboard (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "dashboard"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Permission denied. Required: analytics:read."
+          }
+        },
+        {
+          "name": "[EC-2] Operator Calling Revenue Analytics (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/revenue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "revenue"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Permission denied. Required: analytics:read."
+          }
+        },
+        {
+          "name": "[EC-3] Unauthenticated Analytics Request (401)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "dashboard"
+              ]
+            },
+            "description": "Should return 401 Unauthorized: Access token required."
+          }
+        }
+      ]
+    }
+  ]
+}

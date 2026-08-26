@@ -1,0 +1,567 @@
+{
+  "info": {
+    "name": "Franchise Management Module Postman Collection",
+    "description": "Complete, audited Franchise Management Module Postman Collection covering all 14 endpoints including franchise onboarding, territory configurations, customer mappings, CRM lead workflows, financial analytics (commission, royalty, sales), and status suspensions per franchise_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Franchise Lifecycle & Configuration",
+      "item": [
+        {
+          "name": "/franchises (Create Franchise)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.franchise) {",
+                  "    pm.environment.set(\"franchiseId\", jsonData.data.franchise._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Security Franchise — Mumbai West\",\n  \"franchiseCode\": \"ACME-MUM-01\",\n  \"ownerId\": \"{{franchiseOwnerId}}\",\n  \"contactEmail\": \"hello@acmesecurity.com\",\n  \"contactPhone\": \"9820012345\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises"
+              ]
+            },
+            "description": "Register a new regional franchise entity (Admin only)."
+          }
+        },
+        {
+          "name": "[EC-1] ownerId does not have franchise role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bad Owner Franchise\",\n  \"franchiseCode\": \"BAD-01\",\n  \"ownerId\": \"{{operatorUserId}}\",\n  \"contactEmail\": \"badowner@acme.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises"
+              ]
+            },
+            "description": "Should return 400 Bad Request: User must have the franchise role."
+          }
+        },
+        {
+          "name": "[EC-2] Duplicate franchiseCode",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate Code Franchise\",\n  \"franchiseCode\": \"ACME-MUM-01\",\n  \"ownerId\": \"{{franchiseOwnerId}}\",\n  \"contactEmail\": \"dup@acme.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises"
+              ]
+            },
+            "description": "Should return 409 Conflict: Franchise code already exists."
+          }
+        },
+        {
+          "name": "/franchises (List All Franchises)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/franchises",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises"
+              ]
+            },
+            "description": "List platform franchises with aggregated camera and customer metrics (Admin only)."
+          }
+        },
+        {
+          "name": "/franchises/:id (View Franchise Details)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}"
+              ]
+            },
+            "description": "Get franchise metadata, owner details, territory parameters, and operational status."
+          }
+        },
+        {
+          "name": "/franchises/:id (Suspend / Update Status)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"suspended\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}"
+              ]
+            },
+            "description": "Suspend or modify franchise status (Admin only)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Territory & User Assignments",
+      "item": [
+        {
+          "name": "/franchises/:id/territory (Set Territory Boundaries)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"zone\": \"West\",\n  \"description\": \"Western suburbs from Bandra to Borivali.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/territory",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "territory"
+              ]
+            },
+            "description": "Define territorial jurisdiction and city boundaries."
+          }
+        },
+        {
+          "name": "/franchises/:id/territory (Get Territory Configuration)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/territory",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "territory"
+              ]
+            },
+            "description": "Retrieve active geographical boundary settings."
+          }
+        },
+        {
+          "name": "/franchises/:id/users/:userId (Assign User to Franchise)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Place a customer or operator under this franchise's jurisdiction."
+          }
+        },
+        {
+          "name": "/franchises/:id/customers (Get Franchise Customers)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "customers"
+              ]
+            },
+            "description": "List all customer accounts and active cameras registered under this territory."
+          }
+        }
+      ]
+    },
+    {
+      "name": "CRM Sales Leads Management",
+      "item": [
+        {
+          "name": "/franchises/:id/leads (Create Sales Lead)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.lead) {",
+                  "    pm.environment.set(\"leadId\", jsonData.data.lead._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"phone\": \"9876543210\",\n  \"email\": \"priya@example.com\",\n  \"status\": \"new\",\n  \"notes\": \"Interested in 4-camera smart monitoring bundle.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "leads"
+              ]
+            },
+            "description": "Log a new customer prospect into the franchise CRM pipeline."
+          }
+        },
+        {
+          "name": "/franchises/:id/leads (List Franchise CRM Leads)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "leads"
+              ]
+            },
+            "description": "List all prospective customer leads for this franchise."
+          }
+        },
+        {
+          "name": "/franchises/:id/leads/:leadId (Update Sales Lead)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"converted\",\n  \"notes\": \"Customer onboarded. Installation scheduled.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/leads/{{leadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "leads",
+                "{{leadId}}"
+              ]
+            },
+            "description": "Update pipeline status and negotiation notes for a sales lead."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financial Reports & Analytics",
+      "item": [
+        {
+          "name": "/franchises/:id/commission (Commission Earnings Report)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/commission",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "commission"
+              ]
+            },
+            "description": "Fetch monthly commission earnings breakdown based on active customer revenue."
+          }
+        },
+        {
+          "name": "/franchises/:id/royalty (Royalty Payable Report)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/royalty",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "royalty"
+              ]
+            },
+            "description": "Fetch gross platform royalty dues payable to headquarters."
+          }
+        },
+        {
+          "name": "/franchises/:id/sales (Sales Summary Report)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/franchises/{{franchiseId}}/sales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "franchises",
+                "{{franchiseId}}",
+                "sales"
+              ]
+            },
+            "description": "Aggregate summary of new customer acquisitions, conversions, and leads."
+          }
+        }
+      ]
+    }
+  ]
+}

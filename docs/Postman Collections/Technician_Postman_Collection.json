@@ -1,0 +1,537 @@
+{
+  "info": {
+    "name": "Technician & Installation Module Postman Collection",
+    "description": "Complete, audited Technician / Installation Management Module Postman Collection covering all 13 endpoints including job creation, technician scheduling shortcut (/assigned), reassignments, on-site checklists, proof-of-work photos, digital customer signatures, completion reports, and technician GPS tracking per job_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Job Lifecycle & Assignments",
+      "item": [
+        {
+          "name": "/installations (Create Installation Job)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.job) {",
+                  "    pm.environment.set(\"installationId\", jsonData.data.job._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"4-Camera Smart CCTV Installation\",\n  \"description\": \"Install 4 HD IP cameras, configure NVR and verify live streaming feeds.\",\n  \"type\": \"installation\",\n  \"assignedTechnician\": \"{{technicianUserId}}\",\n  \"franchiseId\": \"{{franchiseId}}\",\n  \"scheduledAt\": \"2026-08-25T10:00:00.000Z\",\n  \"location\": {\n    \"street\": \"45 Palm Avenue\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pincode\": \"400050\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations"
+              ]
+            },
+            "description": "Admin or Franchise creates an installation/maintenance job and assigns a technician."
+          }
+        },
+        {
+          "name": "[EC-1] assignedTechnician does not have technician role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bad Job Assignment\",\n  \"type\": \"installation\",\n  \"assignedTechnician\": \"{{operatorUserId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations"
+              ]
+            },
+            "description": "Should return 400 Bad Request: Assigned user must have technician role."
+          }
+        },
+        {
+          "name": "/installations (List Jobs - Scoped)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/installations?page=1&limit=10&status=scheduled",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "scheduled"
+                }
+              ]
+            },
+            "description": "List jobs with role-based scoping (Technicians see assigned; Franchise sees territory; Admins see all)."
+          }
+        },
+        {
+          "name": "/installations/assigned (Technician Assigned Jobs Shortcut)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{technicianAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/installations/assigned",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "assigned"
+              ]
+            },
+            "description": "Fast shortcut returning active/upcoming jobs specifically assigned to the authenticated technician."
+          }
+        },
+        {
+          "name": "/installations/:id (Get Full Job Details)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/installations/{{installationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "{{installationId}}"
+              ]
+            },
+            "description": "Get full job document including technician info, location, checklist, and evidence photos."
+          }
+        },
+        {
+          "name": "/installations/:id (Update Status & Progress Notes)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "status",
+                  "value": "in_progress",
+                  "type": "text"
+                },
+                {
+                  "key": "notes",
+                  "value": "Arrived on site. Commencing cable routing and camera mounting.",
+                  "type": "text"
+                },
+                {
+                  "key": "attachments",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations/{{installationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "{{installationId}}"
+              ]
+            },
+            "description": "Update job status and progress notes via multipart upload."
+          }
+        },
+        {
+          "name": "/installations/:id/reassign (Reassign Job)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignedTechnician\": \"{{newTechnicianUserId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations/{{installationId}}/reassign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "{{installationId}}",
+                "reassign"
+              ]
+            },
+            "description": "Reassign job to a different technician (Admin, Franchise Admin)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "On-Site Checklists & Evidence",
+      "item": [
+        {
+          "name": "/installations/:id/checklist (Submit On-Site Checklist)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"item\": \"Power supply & PoE switch connected\",\n      \"checked\": true\n    },\n    {\n      \"item\": \"All 4 camera angles calibrated\",\n      \"checked\": true\n    },\n    {\n      \"item\": \"RTSP feed tested on mobile app\",\n      \"checked\": true\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations/{{installationId}}/checklist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "{{installationId}}",
+                "checklist"
+              ]
+            },
+            "description": "Technician submits on-site installation verification checklist."
+          }
+        },
+        {
+          "name": "/installations/:id/photos (Upload Proof-of-Work Photos)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations/{{installationId}}/photos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "{{installationId}}",
+                "photos"
+              ]
+            },
+            "description": "Upload up to 10 photos demonstrating mounted hardware and wiring."
+          }
+        },
+        {
+          "name": "/installations/:id/signature (Upload Digital Customer Signature)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "signature",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations/{{installationId}}/signature",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "{{installationId}}",
+                "signature"
+              ]
+            },
+            "description": "Upload customer digital signature image upon job completion."
+          }
+        },
+        {
+          "name": "/installations/:id/complete (Mark Installation Complete)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"All 4 cameras installed, angled, verified, and customer training completed.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations/{{installationId}}/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "{{installationId}}",
+                "complete"
+              ]
+            },
+            "description": "Mark job as completed and notify franchise manager."
+          }
+        },
+        {
+          "name": "/installations/:id/report (Get Job Completion Report)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/installations/{{installationId}}/report",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "{{installationId}}",
+                "report"
+              ]
+            },
+            "description": "Generate comprehensive job completion audit report."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Technician Location & Schedules",
+      "item": [
+        {
+          "name": "/installations/technicians/:id/schedule (Get Technician Schedule)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/installations/technicians/{{technicianUserId}}/schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "technicians",
+                "{{technicianUserId}}",
+                "schedule"
+              ]
+            },
+            "description": "Get upcoming job schedule for a technician."
+          }
+        },
+        {
+          "name": "/installations/technicians/:id/gps (Update Technician Live GPS)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 19.076,\n  \"lng\": 72.8777\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/installations/technicians/{{technicianUserId}}/gps",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "installations",
+                "technicians",
+                "{{technicianUserId}}",
+                "gps"
+              ]
+            },
+            "description": "Post live GPS coordinates during field work."
+          }
+        }
+      ]
+    }
+  ]
+}

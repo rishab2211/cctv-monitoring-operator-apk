@@ -1,0 +1,542 @@
+{
+  "info": {
+    "name": "Customer Self-Service Module Postman Collection",
+    "description": "Complete, audited Customer Self-Service Module Postman Collection covering all 15 endpoints including plan subscriptions, unified dashboard, camera streams, playback querying with aliases, family sharing/revocation, invoice records, notification feeds, incident histories, profile updates, and cancellations per customer_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Dashboard & Profile",
+      "item": [
+        {
+          "name": "/customer/dashboard (Unified Customer Dashboard)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "dashboard"
+              ]
+            },
+            "description": "Aggregates customer profile, subscription status, camera stats, and recent incidents in one payload."
+          }
+        },
+        {
+          "name": "/customer/profile (Get Customer Profile)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "profile"
+              ]
+            },
+            "description": "Get customer user details and avatar."
+          }
+        },
+        {
+          "name": "/customer/profile (Update Customer Profile)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ramesh K. Sharma\",\n  \"phone\": \"9444455555\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "profile"
+              ]
+            },
+            "description": "Update personal contact details."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cameras, Live Feeds & Sharing",
+      "item": [
+        {
+          "name": "/customer/cameras (List Owned & Shared Cameras)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/cameras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cameras"
+              ]
+            },
+            "description": "Returns all camera feeds owned by or shared with the authenticated customer."
+          }
+        },
+        {
+          "name": "/customer/cameras/:id/live (Live Stream URL)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/cameras/{{cameraId}}/live",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cameras",
+                "{{cameraId}}",
+                "live"
+              ]
+            },
+            "description": "Obtain WebRTC/HLS live connection endpoints and 24h stream token (requires active subscription)."
+          }
+        },
+        {
+          "name": "/customer/cameras/:id/playback (Video Playback - Standard)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/cameras/{{cameraId}}/playback?start=2026-08-21T08:00:00Z&end=2026-08-21T10:00:00Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cameras",
+                "{{cameraId}}",
+                "playback"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2026-08-21T08:00:00Z"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-08-21T10:00:00Z"
+                }
+              ]
+            },
+            "description": "Retrieve recorded video chunks within a time window using standard start/end parameters."
+          }
+        },
+        {
+          "name": "/customer/cameras/:id/playback (Video Playback - Aliases)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/cameras/{{cameraId}}/playback?startTime=2026-08-21T08:00:00Z&endTime=2026-08-21T10:00:00Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cameras",
+                "{{cameraId}}",
+                "playback"
+              ],
+              "query": [
+                {
+                  "key": "startTime",
+                  "value": "2026-08-21T08:00:00Z"
+                },
+                {
+                  "key": "endTime",
+                  "value": "2026-08-21T10:00:00Z"
+                }
+              ]
+            },
+            "description": "Retrieve recorded video chunks using startTime/endTime parameter aliases."
+          }
+        },
+        {
+          "name": "/customer/cameras/:id/share (Share Camera with Family)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"priya.kumar@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customer/cameras/{{cameraId}}/share",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cameras",
+                "{{cameraId}}",
+                "share"
+              ]
+            },
+            "description": "Grant camera viewing permissions to a family member."
+          }
+        },
+        {
+          "name": "/customer/cameras/:id/share/:userId (Revoke Camera Share)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/customer/cameras/{{cameraId}}/share/{{familyUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cameras",
+                "{{cameraId}}",
+                "share",
+                "{{familyUserId}}"
+              ]
+            },
+            "description": "Revoke family member access to camera feed."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions & Invoices",
+      "item": [
+        {
+          "name": "/customer/subscribe (Subscribe to Plan)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planName\": \"Premium\",\n  \"durationMonths\": 12\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customer/subscribe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "subscribe"
+              ]
+            },
+            "description": "Create or upgrade active subscription plan."
+          }
+        },
+        {
+          "name": "/customer/subscription (View Active Subscription)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/subscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "subscription"
+              ]
+            },
+            "description": "View active subscription plan details and expiry date."
+          }
+        },
+        {
+          "name": "/customer/invoices (List Invoices)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/invoices?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "invoices"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "List payment invoices and receipts."
+          }
+        },
+        {
+          "name": "/customer/payments (Payments History Alias)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "payments"
+              ]
+            },
+            "description": "Alias endpoint for customer payment transaction history."
+          }
+        },
+        {
+          "name": "/customer/cancel-subscription (Cancel Subscription)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/customer/cancel-subscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cancel-subscription"
+              ]
+            },
+            "description": "Cancel active subscription renewal (access retained until period ends)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications & Incidents",
+      "item": [
+        {
+          "name": "/customer/notifications (In-App Notifications)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/notifications?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "List in-app alert notifications for the customer."
+          }
+        },
+        {
+          "name": "/customer/reports (My Reported Incidents)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customer/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "reports"
+              ]
+            },
+            "description": "List incidents reported by the customer."
+          }
+        }
+      ]
+    }
+  ]
+}

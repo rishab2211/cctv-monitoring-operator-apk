@@ -1,0 +1,325 @@
+{
+  "info": {
+    "name": "System Settings Module Postman Collection",
+    "description": "Complete, audited System Settings Module Postman Collection covering global platform configurations, notification routing rules, video retention schedules, and Super Admin RBAC mutation controls per setting_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Global Platform Settings",
+      "item": [
+        {
+          "name": "/settings (Get Global System Settings)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "Retrieve global platform parameters including timezone, session timeout, language, and maintenance mode (Admin, Super Admin)."
+          }
+        },
+        {
+          "name": "/settings (Update Global System Settings)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superAdminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maintenanceMode\": false,\n  \"defaultLanguage\": \"en\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"maxLoginAttempts\": 5,\n  \"sessionTimeoutMinutes\": 1440\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "Modify global platform configuration (Super Admin only)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notification & Alert Routing Settings",
+      "item": [
+        {
+          "name": "/settings/notifications (Get Notification Settings)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/settings/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "notifications"
+              ]
+            },
+            "description": "Retrieve platform-wide alert delivery channels and severity threshold dispatch policies."
+          }
+        },
+        {
+          "name": "/settings/notifications (Update Notification Settings)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superAdminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailEnabled\": true,\n  \"smsEnabled\": true,\n  \"pushEnabled\": true,\n  \"alertThresholds\": {\n    \"critical\": \"immediate\",\n    \"high\": \"immediate\",\n    \"warning\": \"batched_hourly\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "notifications"
+              ]
+            },
+            "description": "Configure system-level notification gateways and delivery timings (Super Admin only)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recording & Video Retention Settings",
+      "item": [
+        {
+          "name": "/settings/recording (Get Recording Settings)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/settings/recording",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "recording"
+              ]
+            },
+            "description": "Retrieve global video retention windows, default video quality, and storage quotas."
+          }
+        },
+        {
+          "name": "/settings/recording (Update Recording Settings)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superAdminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"defaultRetentionDays\": 30,\n  \"maxRetentionDays\": 180,\n  \"defaultQuality\": \"1080p\",\n  \"enableMotionOnlyRecording\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings/recording",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "recording"
+              ]
+            },
+            "description": "Modify video retention periods and recording quality defaults (Super Admin only)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "RBAC Guards & Negative Tests",
+      "item": [
+        {
+          "name": "[EC-1] Non-Super-Admin Mutating Settings (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maintenanceMode\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Permission denied. Required: settings:write (Super Admin only)."
+          }
+        },
+        {
+          "name": "[EC-2] Operator Reading Recording Settings (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/settings/recording",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "recording"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Permission denied. Required: settings:read."
+          }
+        },
+        {
+          "name": "[EC-3] Customer Reading Notification Settings (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "customer_token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/settings/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "notifications"
+              ]
+            },
+            "description": "Should return 403 Forbidden: Permission denied. Required: settings:read."
+          }
+        },
+        {
+          "name": "[EC-4] Unauthenticated Settings Request (401)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "Should return 401 Unauthorized: Access token required."
+          }
+        }
+      ]
+    }
+  ]
+}

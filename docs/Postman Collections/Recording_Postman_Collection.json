@@ -1,0 +1,494 @@
+{
+  "info": {
+    "name": "Recording Module Postman Collection",
+    "description": "Complete, audited Recording Module Postman Collection covering schedule management (RESTful PUT/DELETE & body-based POST), playback URL queries with parameter aliases, chunk ingestion with X-System-Key, signed download links, and storage statistics per recording_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Schedule Management",
+      "item": [
+        {
+          "name": "/recordings/schedule (Set Schedule - Body Based)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\",\n  \"rules\": [\n    {\n      \"daysOfWeek\": [\n        1,\n        2,\n        3,\n        4,\n        5\n      ],\n      \"startTime\": \"09:00\",\n      \"endTime\": \"18:00\",\n      \"type\": \"continuous\"\n    },\n    {\n      \"daysOfWeek\": [\n        0,\n        6\n      ],\n      \"startTime\": \"00:00\",\n      \"endTime\": \"23:59\",\n      \"type\": \"motion\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recordings/schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "schedule"
+              ]
+            },
+            "description": "Configure recording schedule rules for a camera (Admin, Franchise Admin)."
+          }
+        },
+        {
+          "name": "/recordings/:cameraId/schedule (Update Schedule - RESTful)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rules\": [\n    {\n      \"daysOfWeek\": [\n        1,\n        2,\n        3,\n        4,\n        5\n      ],\n      \"startTime\": \"08:00\",\n      \"endTime\": \"20:00\",\n      \"type\": \"continuous\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{cameraId}}/schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{cameraId}}",
+                "schedule"
+              ]
+            },
+            "description": "Update recording schedule by cameraId parameter."
+          }
+        },
+        {
+          "name": "/recordings/:cameraId/schedule (Get Camera Schedule)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{cameraId}}/schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{cameraId}}",
+                "schedule"
+              ]
+            },
+            "description": "Get current recording schedule rules."
+          }
+        },
+        {
+          "name": "/recordings/:cameraId/schedule (Delete Camera Schedule)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{cameraId}}/schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{cameraId}}",
+                "schedule"
+              ]
+            },
+            "description": "Delete recording schedule rules for camera."
+          }
+        },
+        {
+          "name": "/recordings/retention (Set Global Retention Policy)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"days\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recordings/retention",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "retention"
+              ]
+            },
+            "description": "Set default cloud retention duration in days (Admin only)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chunk Ingestion & Retrieval",
+      "item": [
+        {
+          "name": "/recordings (Log Recording Chunk - X-System-Key)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.environment.set(\"recordingId\", jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-System-Key",
+                "value": "{{systemKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraId\": \"{{cameraId}}\",\n  \"startTime\": \"2026-08-21T09:00:00Z\",\n  \"endTime\": \"2026-08-21T09:15:00Z\",\n  \"type\": \"continuous\",\n  \"status\": \"completed\",\n  \"url\": \"https://res.cloudinary.com/demo/video/upload/v1/cctv/cam1_chunk1.mp4\",\n  \"sizeBytes\": 25000000,\n  \"durationSeconds\": 900\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recordings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings"
+              ]
+            },
+            "description": "Internal ingestion worker endpoint to register a new MP4/HLS chunk segment."
+          }
+        },
+        {
+          "name": "/recordings/:cameraId/timeline (Get Timeline)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{cameraId}}/timeline?date=2026-08-21",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{cameraId}}",
+                "timeline"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-08-21"
+                }
+              ]
+            },
+            "description": "Get recording timeline blocks for a specific date."
+          }
+        },
+        {
+          "name": "/recordings/:cameraId/playback (Get Playback - standard start/end)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{cameraId}}/playback?start=2026-08-21T08:00:00Z&end=2026-08-21T10:00:00Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{cameraId}}",
+                "playback"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2026-08-21T08:00:00Z"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-08-21T10:00:00Z"
+                }
+              ]
+            },
+            "description": "Query recording chunks within a time window using start/end query parameters."
+          }
+        },
+        {
+          "name": "/recordings/:cameraId/playback (Get Playback - alias startTime/endTime)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{cameraId}}/playback?startTime=2026-08-21T08:00:00Z&endTime=2026-08-21T10:00:00Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{cameraId}}",
+                "playback"
+              ],
+              "query": [
+                {
+                  "key": "startTime",
+                  "value": "2026-08-21T08:00:00Z"
+                },
+                {
+                  "key": "endTime",
+                  "value": "2026-08-21T10:00:00Z"
+                }
+              ]
+            },
+            "description": "Query recording chunks using the startTime/endTime parameter aliases."
+          }
+        },
+        {
+          "name": "/recordings (List All Recordings)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/recordings?page=1&limit=10&cameraId={{cameraId}}&status=completed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "cameraId",
+                  "value": "{{cameraId}}"
+                },
+                {
+                  "key": "status",
+                  "value": "completed"
+                }
+              ]
+            },
+            "description": "List recorded video segments with pagination and filter criteria."
+          }
+        },
+        {
+          "name": "/recordings/:id (Get Recording Details)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{recordingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{recordingId}}"
+              ]
+            },
+            "description": "Get detailed chunk metadata and stream/download URL."
+          }
+        },
+        {
+          "name": "/recordings/:id/download (Generate Download Link)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{recordingId}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{recordingId}}",
+                "download"
+              ]
+            },
+            "description": "Generate a signed, expiring download URL with attachment header."
+          }
+        },
+        {
+          "name": "/recordings/storage (Storage Consumption Stats)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/storage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "storage"
+              ]
+            },
+            "description": "Aggregate platform video storage metrics in bytes and gigabytes (Admin)."
+          }
+        },
+        {
+          "name": "/recordings/:id (Delete Recording Chunk)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/recordings/{{recordingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recordings",
+                "{{recordingId}}"
+              ]
+            },
+            "description": "Delete an individual recording chunk from cloud storage and database."
+          }
+        }
+      ]
+    }
+  ]
+}

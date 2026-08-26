@@ -1,0 +1,498 @@
+{
+  "info": {
+    "name": "Operator Module Postman Collection",
+    "description": "Complete, audited Operator Module Postman Collection covering Part A: Administrative & Management routes (/api/v1/operators) and Part B: Self-Service Operator Panel routes (/api/v1/operator) including shift tracking, bulk camera assignments, dashboard stats, live queues, talkback logs, and activity timelines per operator_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Part A: Management & Administrative Routes (/operators)",
+      "item": [
+        {
+          "name": "/operators/clock-in (Clock In - Administrative)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/operators/clock-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operators",
+                "clock-in"
+              ]
+            },
+            "description": "Operator clocks in to start active monitoring shift."
+          }
+        },
+        {
+          "name": "[EC-1] Clock In when already on shift",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/operators/clock-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operators",
+                "clock-in"
+              ]
+            },
+            "description": "Should return 400 Bad Request: You already have an active shift."
+          }
+        },
+        {
+          "name": "/operators/shifts (List Historical Shifts)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operators/shifts?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operators",
+                "shifts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "List historical shifts with scoping (Operators own shifts, Franchise territory, Admins all)."
+          }
+        },
+        {
+          "name": "/operators/:id/cameras (Bulk Assign Cameras)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraIds\": [\n    \"{{camera1Id}}\",\n    \"{{camera2Id}}\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operators/{{operatorUserId}}/cameras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operators",
+                "{{operatorUserId}}",
+                "cameras"
+              ]
+            },
+            "description": "Bulk assign camera feeds to an operator (Super Admin, Admin, Franchise Admin)."
+          }
+        },
+        {
+          "name": "/operators/:id/performance (Get Performance Metrics)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operators/{{operatorUserId}}/performance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operators",
+                "{{operatorUserId}}",
+                "performance"
+              ]
+            },
+            "description": "Query operator shift count, incidents resolved, and response speed."
+          }
+        },
+        {
+          "name": "/operators/clock-out (Clock Out & Handover Notes)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"handoverNotes\": \"Rear gate camera was occasionally losing signal. Guard alerted to keep visual monitoring.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operators/clock-out",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operators",
+                "clock-out"
+              ]
+            },
+            "description": "Operator clocks out, logs handover notes, and calculates shift duration."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part B: Self-Service Operator Panel (/operator)",
+      "item": [
+        {
+          "name": "/operator/dashboard (Operator Dashboard Summary)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "dashboard"
+              ]
+            },
+            "description": "Operator panel homepage summary with active shift metrics, assigned cameras, open incidents, and active SOS."
+          }
+        },
+        {
+          "name": "/operator/cameras (My Assigned Cameras)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/cameras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "cameras"
+              ]
+            },
+            "description": "Returns all camera streams currently assigned to the logged-in operator."
+          }
+        },
+        {
+          "name": "/operator/alerts/pending (Pending Unacknowledged Alerts)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/alerts/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "alerts",
+                "pending"
+              ]
+            },
+            "description": "Live queue of pending unacknowledged alerts on operator's assigned cameras."
+          }
+        },
+        {
+          "name": "/operator/alerts/active (Active In-Progress Alerts)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/alerts/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "alerts",
+                "active"
+              ]
+            },
+            "description": "Live queue of alerts currently being investigated or acknowledged by this operator."
+          }
+        },
+        {
+          "name": "/operator/calls (Recent Talkback Sessions)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/calls",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "calls"
+              ]
+            },
+            "description": "Recent two-way audio talkback call history on assigned cameras."
+          }
+        },
+        {
+          "name": "/operator/shift/start (Start Shift - Panel)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/operator/shift/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "shift",
+                "start"
+              ]
+            },
+            "description": "Operator panel self-service shift start."
+          }
+        },
+        {
+          "name": "/operator/shift/status (Live Shift Status)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/shift/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "shift",
+                "status"
+              ]
+            },
+            "description": "Returns whether operator is currently on shift and active shift elapsed duration."
+          }
+        },
+        {
+          "name": "/operator/timeline (Operator Activity Timeline)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/timeline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "timeline"
+              ]
+            },
+            "description": "Chronological activity log of actions performed during the current work session."
+          }
+        },
+        {
+          "name": "/operator/reports (Operator Performance Report)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "reports"
+              ]
+            },
+            "description": "Personal performance summary and shift history breakdown."
+          }
+        },
+        {
+          "name": "/operator/shift/end (End Shift - Panel)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"handoverNotes\": \"All camera views clear. No pending incidents.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operator/shift/end",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "shift",
+                "end"
+              ]
+            },
+            "description": "Operator panel self-service shift end with optional handover notes."
+          }
+        }
+      ]
+    }
+  ]
+}

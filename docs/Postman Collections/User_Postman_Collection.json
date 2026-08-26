@@ -1,0 +1,921 @@
+{
+  "info": {
+    "name": "User Management Module Postman Collection",
+    "description": "Complete, audited User Management Module Postman Collection covering user CRUD, role user routes (admins, franchise-admins, operators, technicians, customers), profile updates, avatar uploads, and soft deletes per user_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Role User Creation",
+      "item": [
+        {
+          "name": "admins",
+          "item": [
+            {
+              "name": "Happy Path (Create Admin)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.user) {",
+                      "    pm.environment.set(\"adminId\", jsonData.data.user._id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"City Admin\",\n  \"email\": \"cityadmin@cctvmonitor.com\",\n  \"phone\": \"9111111111\",\n  \"password\": \"Admin@5678\",\n  \"role\": \"admin\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admins",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admins"
+                  ]
+                },
+                "description": "Create a new admin user (super_admin only)."
+              }
+            },
+            {
+              "name": "[EC-1] Duplicate email",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"City Admin 2\",\n  \"email\": \"cityadmin@cctvmonitor.com\",\n  \"phone\": \"9111111112\",\n  \"password\": \"Admin@5678\",\n  \"role\": \"admin\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admins",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admins"
+                  ]
+                },
+                "description": "Should return 409 Conflict."
+              }
+            },
+            {
+              "name": "[EC-2] Duplicate phone",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"City Admin 3\",\n  \"email\": \"uniqueadmin@cctvmonitor.com\",\n  \"phone\": \"9111111111\",\n  \"password\": \"Admin@5678\",\n  \"role\": \"admin\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admins",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admins"
+                  ]
+                },
+                "description": "Should return 409 Conflict."
+              }
+            },
+            {
+              "name": "[EC-3] Weak password",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Weak Admin\",\n  \"email\": \"weakadmin@cctvmonitor.com\",\n  \"phone\": \"9111111113\",\n  \"password\": \"weak\",\n  \"role\": \"admin\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admins",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admins"
+                  ]
+                },
+                "description": "Should return 400 Bad Request."
+              }
+            },
+            {
+              "name": "/admins (List Admins)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/admins?page=1&limit=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admins"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "List all admin users (super_admin only)."
+              }
+            }
+          ]
+        },
+        {
+          "name": "franchise-admins",
+          "item": [
+            {
+              "name": "Happy Path (Create Franchise Admin)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.user) {",
+                      "    pm.environment.set(\"franchiseAdminId\", jsonData.data.user._id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Franchise Admin\",\n  \"email\": \"jane@franchisecctv.com\",\n  \"phone\": \"9999999999\",\n  \"password\": \"Admin@1234\",\n  \"role\": \"franchise_admin\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/franchise-admins",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "franchise-admins"
+                  ]
+                },
+                "description": "Create a new franchise admin user."
+              }
+            },
+            {
+              "name": "/franchise-admins (List Franchise Admins)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/franchise-admins?page=1&limit=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "franchise-admins"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "List all franchise admin users."
+              }
+            }
+          ]
+        },
+        {
+          "name": "operators",
+          "item": [
+            {
+              "name": "Happy Path (Create Operator)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.user) {",
+                      "    pm.environment.set(\"operatorId\", jsonData.data.user._id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Operator\",\n  \"email\": \"johnop@cctvmonitor.com\",\n  \"phone\": \"9222222222\",\n  \"password\": \"Operator@1234\",\n  \"role\": \"operator\",\n  \"operatorDetails\": {\n    \"shiftStart\": \"09:00\",\n    \"shiftEnd\": \"21:00\",\n    \"assignedFranchise\": \"669xyz456abc789012345678\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/operators",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "operators"
+                  ]
+                },
+                "description": "Create an operator user with shift timings and assigned franchise."
+              }
+            },
+            {
+              "name": "/operators (List Operators)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/operators?page=1&limit=10&isActive=true",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "operators"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "isActive",
+                      "value": "true"
+                    }
+                  ]
+                },
+                "description": "List all active operators."
+              }
+            }
+          ]
+        },
+        {
+          "name": "technicians",
+          "item": [
+            {
+              "name": "Happy Path (Create Technician)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.user) {",
+                      "    pm.environment.set(\"technicianId\", jsonData.data.user._id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Tech Sara\",\n  \"email\": \"sara@cctvmonitor.com\",\n  \"phone\": \"9333333333\",\n  \"password\": \"Tech@1234\",\n  \"role\": \"technician\",\n  \"technicianDetails\": {\n    \"skills\": [\n      \"CCTV Installation\",\n      \"Network Setup\"\n    ],\n    \"certifications\": [\n      \"CCTV Pro Cert 2024\"\n    ],\n    \"assignedFranchise\": \"669xyz456abc789012345678\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/technicians",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "technicians"
+                  ]
+                },
+                "description": "Create a technician user with skills and certifications."
+              }
+            },
+            {
+              "name": "/technicians (List Technicians)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/technicians?page=1&limit=10&search=Sara",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "technicians"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "search",
+                      "value": "Sara"
+                    }
+                  ]
+                },
+                "description": "List all technicians."
+              }
+            }
+          ]
+        },
+        {
+          "name": "customers",
+          "item": [
+            {
+              "name": "Happy Path (Create Customer - Admin)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.user) {",
+                      "    pm.environment.set(\"customerId\", jsonData.data.user._id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Ramesh Kumar\",\n  \"email\": \"ramesh@example.com\",\n  \"phone\": \"9444444444\",\n  \"password\": \"Customer@1234\",\n  \"role\": \"customer\",\n  \"address\": {\n    \"street\": \"12 Main Road\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pincode\": \"400001\"\n  },\n  \"customerDetails\": {\n    \"assignedFranchise\": \"669xyz456abc789012345678\",\n    \"emergencyContact\": {\n      \"name\": \"Priya Kumar\",\n      \"phone\": \"9444444445\",\n      \"relation\": \"Spouse\"\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/customers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "customers"
+                  ]
+                },
+                "description": "Create a customer record via administrative endpoint."
+              }
+            },
+            {
+              "name": "/customers (List Customers - Admin)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/customers?page=1&limit=10&sortBy=name&sortOrder=asc",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "customers"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "sortBy",
+                      "value": "name"
+                    },
+                    {
+                      "key": "sortOrder",
+                      "value": "asc"
+                    }
+                  ]
+                },
+                "description": "List all registered customers with pagination."
+              }
+            },
+            {
+              "name": "/customers/:id (Get Customer Details)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/customers/{{customerId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "customers",
+                    "{{customerId}}"
+                  ]
+                },
+                "description": "Get full customer profile details including address and emergency contact."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "General User Operations",
+      "item": [
+        {
+          "name": "/users (List All Users with Filters)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10&role=operator&isActive=true&search=John",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "role",
+                  "value": "operator"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true"
+                },
+                {
+                  "key": "search",
+                  "value": "John"
+                }
+              ]
+            },
+            "description": "List all users across the system with optional filters."
+          }
+        },
+        {
+          "name": "/users/:id (Get User by ID)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{operatorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{operatorId}}"
+              ]
+            },
+            "description": "Fetch single user document by ObjectId."
+          }
+        },
+        {
+          "name": "/users/:id (Update User)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Updated\",\n  \"address\": {\n    \"street\": \"45 New Street\",\n    \"city\": \"Delhi\",\n    \"state\": \"Delhi\",\n    \"pincode\": \"110001\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{operatorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{operatorId}}"
+              ]
+            },
+            "description": "Update user profile details by ID."
+          }
+        },
+        {
+          "name": "/users/:id/status (Toggle Status / Deactivate)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false,\n  \"reason\": \"Violated code of conduct\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{operatorId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{operatorId}}",
+                "status"
+              ]
+            },
+            "description": "Activate or deactivate a user account."
+          }
+        },
+        {
+          "name": "/users/:id/activity (User Activity Logs)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{operatorId}}/activity?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{operatorId}}",
+                "activity"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Retrieve chronological activity history for a specific user."
+          }
+        },
+        {
+          "name": "/users/:id (Soft Delete User)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{operatorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{operatorId}}"
+              ]
+            },
+            "description": "Soft delete a user record, revoking all active sessions and refresh tokens (super_admin only)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Profile & Avatar",
+      "item": [
+        {
+          "name": "/users/profile (Update Own Profile)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Super Admin Updated\",\n  \"phone\": \"9876543211\",\n  \"address\": {\n    \"street\": \"HQ Office, 1st Floor\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560001\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            },
+            "description": "Update the authenticated user's own profile and address."
+          }
+        },
+        {
+          "name": "/users/profile/avatar (Upload Profile Avatar)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": "",
+                  "description": "Select an image (.jpg, .jpeg, .png, .webp) for Cloudinary 300x300 crop or local upload."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/profile/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile",
+                "avatar"
+              ]
+            },
+            "description": "Upload profile avatar via multipart/form-data with Cloudinary 300x300 thumbnail crop."
+          }
+        }
+      ]
+    }
+  ]
+}

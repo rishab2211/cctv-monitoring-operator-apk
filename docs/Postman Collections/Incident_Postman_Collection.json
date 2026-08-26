@@ -1,0 +1,495 @@
+{
+  "info": {
+    "name": "Incident Management Module Postman Collection",
+    "description": "Complete, audited Incident Management Module Postman Collection covering multipart/form-data reporting, multi-tenant scoping, operator assignment, evidence media uploads, verification, activity timelines, report generation, and formal closure per incident_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Incident Creation & Scoped Retrieval",
+      "item": [
+        {
+          "name": "/incidents (Report Incident - Multipart Upload)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.incident) {",
+                  "    pm.environment.set(\"incidentId\", jsonData.data.incident._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Suspicious Activity at Back Door",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Individual attempting to open secured rear entrance at 02:15 AM.",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "theft",
+                  "type": "text"
+                },
+                {
+                  "key": "severity",
+                  "value": "high",
+                  "type": "text"
+                },
+                {
+                  "key": "cameraId",
+                  "value": "{{cameraId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "attachments",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents"
+              ]
+            },
+            "description": "Report a new security incident with optional file attachments (Customer, Operator, Admin)."
+          }
+        },
+        {
+          "name": "[EC-1] Customer reporting on unowned camera",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "unauthorized_customer_token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Unauthorized Incident",
+                  "type": "text"
+                },
+                {
+                  "key": "cameraId",
+                  "value": "{{unownedCameraId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents"
+              ]
+            },
+            "description": "Should return 403 Forbidden: You do not have access to this camera."
+          }
+        },
+        {
+          "name": "/incidents (List Incidents - Scoped)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/incidents?page=1&limit=10&status=open&severity=high",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "open"
+                },
+                {
+                  "key": "severity",
+                  "value": "high"
+                }
+              ]
+            },
+            "description": "List incidents with multi-tenant filtering (Admins global, Franchise territory, Operators assigned, Customers self-reported)."
+          }
+        },
+        {
+          "name": "/incidents/:id (Get Incident Details)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}"
+              ]
+            },
+            "description": "Get single incident document including reporter, assigned operator, evidence files, and notes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Triage, Evidence & Investigation",
+      "item": [
+        {
+          "name": "/incidents/:id/assign (Assign to Operator)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignedTo\": \"{{operatorUserId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}",
+                "assign"
+              ]
+            },
+            "description": "Assign incident investigation to an operator (Admin, Franchise Admin)."
+          }
+        },
+        {
+          "name": "/incidents/:id/status (Update Incident Status)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"resolutionNotes\": \"Reviewed high-definition recording. Authorized technician verified on site.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}",
+                "status"
+              ]
+            },
+            "description": "Update incident lifecycle status (open, investigating, resolved, closed)."
+          }
+        },
+        {
+          "name": "/incidents/:id/notes (Add Investigation Note)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Dispatched security patrol unit to inspect perimeter.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}/notes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}",
+                "notes"
+              ]
+            },
+            "description": "Append internal operator notes and investigation updates."
+          }
+        },
+        {
+          "name": "/incidents/:id/media (Upload Additional Evidence Media)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}/media",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}",
+                "media"
+              ]
+            },
+            "description": "Upload additional photos or video recordings as evidence."
+          }
+        },
+        {
+          "name": "/incidents/:id/verify (Formally Verify Incident)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Confirmed breach attempt by reviewing camera 1 & 2 synchronised recordings.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}",
+                "verify"
+              ]
+            },
+            "description": "Formally verify incident authenticity and severity."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit Trail, Reports & Closure",
+      "item": [
+        {
+          "name": "/incidents/:id/timeline (Get Incident Timeline)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}/timeline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}",
+                "timeline"
+              ]
+            },
+            "description": "Retrieve chronological sequence of incident actions and operator notes."
+          }
+        },
+        {
+          "name": "/incidents/:id/report (Generate Incident Report)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}/report",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}",
+                "report"
+              ]
+            },
+            "description": "Generate structured audit report summary with evidence links."
+          }
+        },
+        {
+          "name": "/incidents/:id/close (Close Incident)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolutionNotes\": \"Final case closed after police report and property owner sign-off.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents/{{incidentId}}/close",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "{{incidentId}}",
+                "close"
+              ]
+            },
+            "description": "Formally archive and close incident case with final resolution notes."
+          }
+        }
+      ]
+    }
+  ]
+}

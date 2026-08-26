@@ -1,0 +1,331 @@
+{
+  "info": {
+    "name": "Audio Talkback Module Postman Collection",
+    "description": "Complete, audited Audio Talkback Module Postman Collection covering hardware capabilities inspection, WHIP session initiation, concurrency conflict handling (409), session status queries, active session rosters, and historical call logs per talkback_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Session Lifecycle & WHIP Controls",
+      "item": [
+        {
+          "name": "/talkback/:cameraId/capabilities (Check Audio Capabilities)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/{{cameraId}}/capabilities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "{{cameraId}}",
+                "capabilities"
+              ]
+            },
+            "description": "Check if a camera supports two-way audio output and inspect audio codec."
+          }
+        },
+        {
+          "name": "/talkback/:cameraId/start (Start Talkback Session - WHIP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data) {",
+                  "    if (jsonData.data.session) pm.environment.set(\"talkbackSessionId\", jsonData.data.session._id);",
+                  "    if (jsonData.data.whipUrl) pm.environment.set(\"whipUrl\", jsonData.data.whipUrl);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/{{cameraId}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "{{cameraId}}",
+                "start"
+              ]
+            },
+            "description": "Start a two-way audio talkback session and obtain the MediaMTX WHIP publishing URL."
+          }
+        },
+        {
+          "name": "[EC-1] Talkback Disabled on Camera",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/{{disabledTalkbackCameraId}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "{{disabledTalkbackCameraId}}",
+                "start"
+              ]
+            },
+            "description": "Should return 400 Bad Request: Talkback is not enabled for this camera."
+          }
+        },
+        {
+          "name": "[EC-2] Concurrency Conflict (Another Operator Active)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "second_operator_token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/{{cameraId}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "{{cameraId}}",
+                "start"
+              ]
+            },
+            "description": "Should return 409 Conflict: Camera is already in an active talkback session with another operator."
+          }
+        },
+        {
+          "name": "[EC-3] Idempotent Retry by Same Operator",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/{{cameraId}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "{{cameraId}}",
+                "start"
+              ]
+            },
+            "description": "Should return 200 OK returning the existing session and whipUrl."
+          }
+        },
+        {
+          "name": "/talkback/:cameraId/status (Get Session Status)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/{{cameraId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "{{cameraId}}",
+                "status"
+              ]
+            },
+            "description": "Query whether talkback is currently active or free on a target camera."
+          }
+        },
+        {
+          "name": "/talkback/:cameraId/stop (Stop Talkback Session)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/{{cameraId}}/stop",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "{{cameraId}}",
+                "stop"
+              ]
+            },
+            "description": "End active talkback session and release camera audio lock."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Call Logs & Active Sessions",
+      "item": [
+        {
+          "name": "/talkback/active (List All Active Talkback Sessions)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "active"
+              ]
+            },
+            "description": "List all ongoing talkback audio sessions platform-wide (Admin, Franchise Admin)."
+          }
+        },
+        {
+          "name": "/talkback/logs (Historical Call Logs)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/talkback/logs?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talkback",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Retrieve paginated historical audio talkback call logs and durations."
+          }
+        },
+        {
+          "name": "/operator/calls (Operator Panel Call Logs Wrapper)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/operator/calls?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operator",
+                "calls"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Convenient operator panel wrapper returning call logs for assigned cameras."
+          }
+        }
+      ]
+    }
+  ]
+}

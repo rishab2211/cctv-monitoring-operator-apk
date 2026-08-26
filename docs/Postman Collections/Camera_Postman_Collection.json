@@ -1,0 +1,714 @@
+{
+  "info": {
+    "name": "Camera Management Module Postman Collection",
+    "description": "Complete, audited Camera Management Module Postman Collection covering all 18 endpoints including hardware registration, assignments, status toggles, heartbeat telemetry, QR scan triggers, and multi-tenant scoping per camera_testing_guide.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Camera Registration & Lifecycle",
+      "item": [
+        {
+          "name": "/cameras (Create Camera)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.camera) {",
+                  "    pm.environment.set(\"cameraId\", jsonData.data.camera._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Front Gate Camera\",\n  \"serialNumber\": \"CAM-FG-1004\",\n  \"rtspUrl\": \"rtsp://admin:pass123@192.168.1.104:554/stream1\",\n  \"location\": {\n    \"street\": \"123 Security Blvd\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pincode\": \"400001\",\n    \"latitude\": 19.076,\n    \"longitude\": 72.8777\n  },\n  \"settings\": {\n    \"recordingEnabled\": false,\n    \"motionDetectionEnabled\": true,\n    \"aiFeaturesEnabled\": false,\n    \"recordingRetentionDays\": 7\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras"
+              ]
+            },
+            "description": "Register a new camera (Super Admin, Admin, Franchise Admin, Technician)."
+          }
+        },
+        {
+          "name": "[EC-1] Duplicate Serial Number",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate Camera\",\n  \"serialNumber\": \"CAM-FG-1004\",\n  \"rtspUrl\": \"rtsp://admin:pass123@192.168.1.105:554/stream1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras"
+              ]
+            },
+            "description": "Should return 409 Conflict."
+          }
+        },
+        {
+          "name": "[EC-2] Invalid RTSP URL",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bad RTSP Camera\",\n  \"serialNumber\": \"CAM-BAD-RTSP\",\n  \"rtspUrl\": \"not_a_url\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras"
+              ]
+            },
+            "description": "Should return 400 Bad Request."
+          }
+        },
+        {
+          "name": "/cameras (List Cameras - Multi-Tenant Scoped)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cameras?page=1&limit=10&status=online&search=Gate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "online"
+                },
+                {
+                  "key": "search",
+                  "value": "Gate"
+                }
+              ]
+            },
+            "description": "List cameras with role-based scoping (Admins see all, Franchise sees territory, Operator/Customer see assigned)."
+          }
+        },
+        {
+          "name": "/cameras/:id (Get Camera Details)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}"
+              ]
+            },
+            "description": "Get detailed camera configuration, location, health metrics, and active settings."
+          }
+        },
+        {
+          "name": "/cameras/:id (Update Camera)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Front Gate HD Camera\",\n  \"settings\": {\n    \"recordingRetentionDays\": 14\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}"
+              ]
+            },
+            "description": "Update camera properties and configuration."
+          }
+        },
+        {
+          "name": "/cameras/:id (Soft-Delete / Decommission)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}"
+              ]
+            },
+            "description": "Soft delete camera record and set status to offline (Admin, Franchise Admin)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assignment & Ownership",
+      "item": [
+        {
+          "name": "/cameras/:id/assign (Assign Camera)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"operatorIds\": [\n    \"{{operatorId}}\"\n  ],\n  \"franchiseId\": \"{{franchiseId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "assign"
+              ]
+            },
+            "description": "Assign camera to customer, monitoring operators, and franchise."
+          }
+        },
+        {
+          "name": "/cameras/:id/transfer (Transfer Camera Ownership)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "transfer"
+              ]
+            },
+            "description": "Transfer camera ownership to a different customer ID."
+          }
+        },
+        {
+          "name": "/cameras/customer/:customerId (Customer Cameras)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cameras/customer/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "customer",
+                "{{customerId}}"
+              ]
+            },
+            "description": "List all cameras owned by or assigned to a specific customer."
+          }
+        },
+        {
+          "name": "/cameras/operator/:operatorId (Operator Cameras)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cameras/operator/{{operatorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "operator",
+                "{{operatorId}}"
+              ]
+            },
+            "description": "List all cameras monitored by a specific operator."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hardware Health & Status",
+      "item": [
+        {
+          "name": "/cameras/:id/status (Update Connection Status)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"maintenance\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "status"
+              ]
+            },
+            "description": "Update camera status enum (online, offline, maintenance)."
+          }
+        },
+        {
+          "name": "/cameras/:id/heartbeat (Heartbeat Ping via X-System-Key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-System-Key",
+                "value": "{{systemKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpuUsage\": 12.5,\n  \"memoryUsage\": 45.2,\n  \"temperature\": 42,\n  \"storageUsage\": 18.9\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/heartbeat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "heartbeat"
+              ]
+            },
+            "description": "Hardware telemetry ingestion endpoint authenticated with X-System-Key."
+          }
+        },
+        {
+          "name": "/cameras/:id/health (Fetch Health Metrics)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "health"
+              ]
+            },
+            "description": "Fetch CPU, memory, temperature, storage, and lastPing metrics."
+          }
+        },
+        {
+          "name": "/cameras/:id/restart (Remote Camera Restart)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/restart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "restart"
+              ]
+            },
+            "description": "Trigger remote camera reboot command (Super Admin, Admin, Operator)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Configuration & Features",
+      "item": [
+        {
+          "name": "/cameras/:id/recording (Toggle Recording)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/recording",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "recording"
+              ]
+            },
+            "description": "Toggle cloud video recording setting on/off."
+          }
+        },
+        {
+          "name": "/cameras/:id/motion (Toggle Motion Detection)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/motion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "motion"
+              ]
+            },
+            "description": "Toggle camera motion detection setting on/off."
+          }
+        },
+        {
+          "name": "/cameras/:id/ai (Toggle AI Features)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/ai",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "ai"
+              ]
+            },
+            "description": "Toggle advanced AI vision analytics (Admin, Franchise Admin)."
+          }
+        },
+        {
+          "name": "/cameras/:id/qr-scan (QR Scan Setup Trigger)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/qr-scan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "qr-scan"
+              ]
+            },
+            "description": "Initiate technician QR scan setup workflow for automated pairing."
+          }
+        },
+        {
+          "name": "/cameras/:id/config (Read Configuration)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cameras/{{cameraId}}/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cameras",
+                "{{cameraId}}",
+                "config"
+              ]
+            },
+            "description": "Read hardware configuration properties and RTSP settings."
+          }
+        }
+      ]
+    }
+  ]
+}
