@@ -128,16 +128,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     // Socket real-time events
-    const unsubAlertNew = socketService.on('alert:new', () => {
+    const unsubAlertNew = socketService.on('new_alert', () => {
       loadDashboardData();
     });
-    const unsubSosTriggered = socketService.on('sos:triggered', () => {
+    const unsubSosTriggered = socketService.on('sos_triggered', () => {
       loadDashboardData();
     });
-    const unsubSosResolved = socketService.on('sos:resolved', () => {
+    const unsubSosAcknowledged = socketService.on('sos_acknowledged', () => {
       loadDashboardData();
     });
-    const unsubShiftEnded = socketService.on('shift:ended', (data: any) => {
+    const unsubSosResolved = socketService.on('sos_resolved', () => {
+      loadDashboardData();
+    });
+    const unsubShiftHandover = socketService.on('shift_handover', (data: any) => {
       if (data?.handoverNotes) {
         dispatch(
           setHandoverBanner({
@@ -154,8 +157,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       subscription.remove();
       unsubAlertNew();
       unsubSosTriggered();
+      unsubSosAcknowledged();
       unsubSosResolved();
-      unsubShiftEnded();
+      unsubShiftHandover();
     };
   }, [loadDashboardData, dispatch]);
 

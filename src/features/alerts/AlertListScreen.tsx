@@ -31,6 +31,7 @@ import {
 } from '../../store/slices/alertSlice';
 import { Alert as AlertType } from '../../types/alert.types';
 import { formatRelativeTime } from '../../utils/date';
+import { socketService } from '../../services/socket.service';
 
 interface AlertListScreenProps {
   navigation: any;
@@ -58,6 +59,26 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
 
   useEffect(() => {
     loadAlerts();
+
+    const unsubNewAlert = socketService.on('new_alert', () => {
+      loadAlerts();
+    });
+    const unsubAck = socketService.on('alert_acknowledged', () => {
+      loadAlerts();
+    });
+    const unsubResolved = socketService.on('alert_resolved', () => {
+      loadAlerts();
+    });
+    const unsubEscalated = socketService.on('alert_escalated', () => {
+      loadAlerts();
+    });
+
+    return () => {
+      unsubNewAlert();
+      unsubAck();
+      unsubResolved();
+      unsubEscalated();
+    };
   }, []);
 
   const onRefresh = async () => {

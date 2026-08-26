@@ -24,6 +24,7 @@ import { SOSApi } from '../../api/endpoints/sos.api';
 import { setActiveSosAlerts } from '../../store/slices/sosSlice';
 import { SOSAlert } from '../../types/sos.types';
 import { formatRelativeTime } from '../../utils/date';
+import { socketService } from '../../services/socket.service';
 
 interface SOSListScreenProps {
   navigation: any;
@@ -50,6 +51,22 @@ export const SOSListScreen: React.FC<SOSListScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     loadSOS();
+
+    const unsubTriggered = socketService.on('sos_triggered', () => {
+      loadSOS();
+    });
+    const unsubAck = socketService.on('sos_acknowledged', () => {
+      loadSOS();
+    });
+    const unsubResolved = socketService.on('sos_resolved', () => {
+      loadSOS();
+    });
+
+    return () => {
+      unsubTriggered();
+      unsubAck();
+      unsubResolved();
+    };
   }, []);
 
   const onRefresh = async () => {
