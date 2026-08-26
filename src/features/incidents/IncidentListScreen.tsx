@@ -63,10 +63,11 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
         return { icon: LockIcon, color: Colors.critical };
       case 'vandalism':
         return { icon: AlertDiamondIcon, color: Colors.warning };
-      case 'safety':
-        return { icon: ShieldCheckIcon, color: Colors.online };
+      case 'technical_issue':
       case 'maintenance':
         return { icon: Wrench01Icon, color: Colors.info };
+      case 'safety':
+        return { icon: ShieldCheckIcon, color: Colors.online };
       default:
         return { icon: File01Icon, color: Colors.textSecondary };
     }

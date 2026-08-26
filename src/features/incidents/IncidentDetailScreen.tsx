@@ -27,6 +27,7 @@ import { AppIcon } from '../../components/common/AppIcon';
 import { IncidentApi } from '../../api/endpoints/incident.api';
 import { Incident, IncidentNote } from '../../types/incident.types';
 import { formatDateTime } from '../../utils/date';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface IncidentDetailScreenProps {
   navigation: any;
@@ -62,7 +63,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
       const data = await IncidentApi.getIncidentById(incidentId);
       setIncident(data);
     } catch (e: any) {
-      Alert.alert('Error', 'Failed to load incident details.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not fetch incident details.'));
     } finally {
       setLoading(false);
     }
@@ -72,12 +73,12 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
     loadIncident();
   }, [incidentId]);
 
-  const isAssignedToMe = () => {
-    if (!incident || !incident.assignedTo) return false;
-    const assignedId =
-      typeof incident.assignedTo === 'object' ? incident.assignedTo._id : incident.assignedTo;
-    return assignedId === user?._id;
-  };
+  const assignedId =
+    typeof incident?.assignedTo === 'object' && incident?.assignedTo !== null
+      ? incident.assignedTo._id
+      : incident?.assignedTo;
+
+  const isAssignedToMe = assignedId === user?.userId;
 
   const handleStatusUpdate = async (newStatus: 'investigating' | 'resolved') => {
     setActionLoading(true);
@@ -86,7 +87,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
       setIncident(updated);
       Alert.alert('Status Updated', `Incident status set to ${newStatus}.`);
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Could not update status.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not update status.'));
     } finally {
       setActionLoading(false);
     }
@@ -101,7 +102,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
       setIncident((prev) => (prev ? { ...prev, notes } : prev));
       setNoteText('');
     } catch (e: any) {
-      Alert.alert('Error', 'Could not post note.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not post note.'));
     } finally {
       setNoteLoading(false);
     }
@@ -114,7 +115,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
       setIncident(updated);
       Alert.alert('Verified', 'Incident formally verified.');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Failed to verify.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Failed to verify incident.'));
     } finally {
       setActionLoading(false);
     }
@@ -128,24 +129,30 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
         `Generated: ${new Date(report.generatedAt).toLocaleString()}\n\nSeverity: ${report.summary.severity}\nStatus: ${report.summary.status}\nTotal Notes: ${report.summary.totalNotes}\nTotal Media: ${report.summary.totalAttachments}`
       );
     } catch (e: any) {
-      Alert.alert('Error', 'Failed to generate incident summary report.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Failed to generate incident summary report.'));
     }
   };
 
   const handleCloseIncident = async () => {
-    if (!closeNotes.trim()) {
+    const trimmedNotes = closeNotes.trim();
+    if (!trimmedNotes) {
       Alert.alert('Closure Notes Required', 'Please enter your final resolution summary.');
+      return;
+    }
+
+    if (trimmedNotes.length < 5) {
+      Alert.alert('Closure Notes Too Short', 'Resolution notes must be at least 5 characters long.');
       return;
     }
 
     setActionLoading(true);
     try {
-      const updated = await IncidentApi.closeIncident(incidentId, closeNotes.trim());
+      const updated = await IncidentApi.closeIncident(incidentId, trimmedNotes);
       setIncident(updated);
       setCloseModalVisible(false);
       Alert.alert('Incident Closed', 'Incident has been formally closed.');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Could not close incident.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not close incident.'));
     } finally {
       setActionLoading(false);
     }

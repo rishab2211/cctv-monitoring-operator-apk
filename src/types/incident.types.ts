@@ -1,4 +1,4 @@
-export type IncidentType = 'theft' | 'vandalism' | 'safety' | 'maintenance' | 'other';
+export type IncidentType = 'theft' | 'vandalism' | 'technical_issue' | 'other' | 'safety' | 'maintenance';
 export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical';
 export type IncidentStatus = 'open' | 'investigating' | 'resolved' | 'closed';
 

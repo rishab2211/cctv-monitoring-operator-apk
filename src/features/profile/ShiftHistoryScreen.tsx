@@ -38,43 +38,61 @@ export const ShiftHistoryScreen: React.FC<ShiftHistoryScreenProps> = ({ navigati
   const [refreshing, setRefreshing] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState<{ [key: string]: boolean }>({});
 
+  const isFetchingRef = React.useRef(false);
+  const onEndReachedCalledDuringMomentum = React.useRef(true);
+
   const fetchShifts = useCallback(async (pageToFetch: number, isRefresh = false) => {
+    if (isFetchingRef.current) {
+      return;
+    }
+    isFetchingRef.current = true;
+
     try {
       const data = await OperatorApi.getShiftsHistory(pageToFetch, PAGE_SIZE);
       const newShifts = data.shifts || [];
 
-      if (isRefresh) {
-        setShifts(newShifts);
-      } else {
-        setShifts((prev) => [...prev, ...newShifts]);
-      }
+      setShifts((prev) => (isRefresh ? newShifts : [...prev, ...newShifts]));
 
-      setHasMore(newShifts.length === PAGE_SIZE && shifts.length + newShifts.length < (data.total || 0));
+      const totalCount = data.total ?? 0;
+      if (newShifts.length < PAGE_SIZE || (totalCount > 0 && pageToFetch * PAGE_SIZE >= totalCount)) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+      setPage(pageToFetch);
     } catch (e) {
       console.warn('[ShiftHistory] Error loading shifts:', e);
+      // Disable hasMore on failure to avoid infinite loop of failing requests
+      setHasMore(false);
     } finally {
       setLoading(false);
       setLoadingMore(false);
       setRefreshing(false);
+      isFetchingRef.current = false;
     }
-  }, [shifts.length]);
+  }, []);
 
   useEffect(() => {
     fetchShifts(1, true);
-  }, []);
+  }, [fetchShifts]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    setPage(1);
+    setHasMore(true);
     await fetchShifts(1, true);
   };
 
   const handleLoadMore = () => {
-    if (!loading && !loadingMore && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
+    if (
+      !onEndReachedCalledDuringMomentum.current &&
+      !loading &&
+      !loadingMore &&
+      hasMore &&
+      !isFetchingRef.current
+    ) {
+      onEndReachedCalledDuringMomentum.current = true;
       setLoadingMore(true);
-      fetchShifts(nextPage, false);
+      fetchShifts(page + 1, false);
     }
   };
 
@@ -187,8 +205,11 @@ export const ShiftHistoryScreen: React.FC<ShiftHistoryScreenProps> = ({ navigati
               colors={[Colors.primary]}
             />
           }
+          onMomentumScrollBegin={() => {
+            onEndReachedCalledDuringMomentum.current = false;
+          }}
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.3}
+          onEndReachedThreshold={0.1}
           ListFooterComponent={
             loadingMore ? (
               <View style={styles.footerLoader}>

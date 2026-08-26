@@ -28,6 +28,7 @@ import { IncidentApi } from '../../api/endpoints/incident.api';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import { Camera } from '../../types/camera.types';
 import { IncidentSeverity, IncidentType } from '../../types/incident.types';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface ReportIncidentScreenProps {
   navigation: any;
@@ -59,16 +60,42 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
   }, []);
 
   const handleSubmit = async () => {
-    if (!title.trim() || !description.trim()) {
-      Alert.alert('Required Fields', 'Please enter an incident title and detailed description.');
+    const trimmedTitle = title.trim();
+    const trimmedDescription = description.trim();
+
+    if (!trimmedTitle) {
+      Alert.alert('Required Field', 'Please enter an incident title.');
+      return;
+    }
+
+    if (trimmedTitle.length < 3) {
+      Alert.alert('Invalid Title', 'Incident title must be at least 3 characters long.');
+      return;
+    }
+
+    if (trimmedTitle.length > 100) {
+      Alert.alert('Invalid Title', 'Incident title must not exceed 100 characters.');
+      return;
+    }
+
+    if (!trimmedDescription) {
+      Alert.alert('Required Field', 'Please enter a detailed incident description.');
+      return;
+    }
+
+    if (trimmedDescription.length < 10) {
+      Alert.alert(
+        'Description Too Short',
+        `Incident description must be at least 10 characters long (currently ${trimmedDescription.length} characters).`
+      );
       return;
     }
 
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append('title', title.trim());
-      formData.append('description', description.trim());
+      formData.append('title', trimmedTitle);
+      formData.append('description', trimmedDescription);
       formData.append('type', type);
       formData.append('severity', severity);
       if (selectedCameraId) {
@@ -88,7 +115,7 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
         ]
       );
     } catch (e: any) {
-      Alert.alert('Submission Error', e.response?.data?.message || 'Could not file incident.');
+      Alert.alert('Submission Error', getApiErrorMessage(e, 'Could not file incident.'));
     } finally {
       setLoading(false);
     }
@@ -97,8 +124,7 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
   const incidentTypes: Array<{ key: IncidentType; label: string; icon: any }> = [
     { key: 'theft', label: 'Theft', icon: LockIcon },
     { key: 'vandalism', label: 'Vandalism', icon: AlertDiamondIcon },
-    { key: 'safety', label: 'Safety', icon: ShieldCheckIcon },
-    { key: 'maintenance', label: 'Maintenance', icon: Wrench01Icon },
+    { key: 'technical_issue', label: 'Technical Issue', icon: Wrench01Icon },
     { key: 'other', label: 'Other', icon: File01Icon },
   ];
 
@@ -119,16 +145,32 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Form Container */}
         <View style={styles.form}>
-          <Text style={styles.label}>Incident Title *</Text>
+          <View style={styles.labelRow}>
+            <Text style={styles.label}>Incident Title *</Text>
+            <Text style={styles.charCount}>{title.trim().length}/100 (min 3)</Text>
+          </View>
           <TextInput
             placeholder="e.g. Unauthorized entry attempt at Rear Door"
             placeholderTextColor={Colors.textMuted}
             style={styles.input}
             value={title}
             onChangeText={setTitle}
+            maxLength={100}
           />
 
-          <Text style={[styles.label, { marginTop: 16 }]}>Description *</Text>
+          <View style={[styles.labelRow, { marginTop: 16 }]}>
+            <Text style={styles.label}>Description *</Text>
+            <Text
+              style={[
+                styles.charCount,
+                description.trim().length > 0 && description.trim().length < 10
+                  ? { color: Colors.critical }
+                  : {},
+              ]}
+            >
+              {description.trim().length} chars (min 10)
+            </Text>
+          </View>
           <TextInput
             multiline
             numberOfLines={4}
@@ -140,7 +182,7 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
           />
 
           {/* Incident Type Picker */}
-          <Text style={[styles.label, { marginTop: 16 }]}>Incident Category</Text>
+          <Text style={[styles.label, { marginTop: 16, marginBottom: 8 }]}>Incident Category</Text>
           <View style={styles.chipRow}>
             {incidentTypes.map((t) => {
               const isSelected = type === t.key;
@@ -248,11 +290,21 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     padding: 18,
   },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   label: {
     fontSize: 13,
     fontWeight: '700',
     color: Colors.textSecondary,
-    marginBottom: 8,
+  },
+  charCount: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontWeight: '600',
   },
   input: {
     backgroundColor: Colors.surfaceElevated,
