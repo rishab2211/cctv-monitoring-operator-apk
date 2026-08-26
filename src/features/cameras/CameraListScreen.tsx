@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   CameraVideoIcon,
@@ -34,7 +33,6 @@ interface CameraListScreenProps {
 }
 
 export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
   const { cameras, statusFilter } = useSelector((state: RootState) => state.camera);
 

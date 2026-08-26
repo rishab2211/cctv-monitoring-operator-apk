@@ -30,8 +30,8 @@ export const TalkbackApi = {
   getCallsLog: async (page = 1, limit = 20): Promise<{ logs: TalkbackSession[]; total: number }> => {
     const response = await apiClient.get(`/operator/calls?page=${page}&limit=${limit}`);
     return {
-      logs: response.data.data.logs || response.data.data || [],
-      total: response.data.data.total || 0,
+      logs: response.data.data.calls || response.data.data.logs || response.data.data || [],
+      total: response.data.data.count ?? response.data.data.total ?? 0,
     };
   },
 };

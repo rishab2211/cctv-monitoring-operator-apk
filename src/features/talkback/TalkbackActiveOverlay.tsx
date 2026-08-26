@@ -14,6 +14,7 @@ import { Button } from '../../components/common/Button';
 import { AppIcon } from '../../components/common/AppIcon';
 import { TalkbackApi } from '../../api/endpoints/talkback.api';
 import { formatDuration } from '../../utils/date';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface TalkbackActiveOverlayProps {
   navigation: any;
@@ -33,9 +34,12 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
 
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<any>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const waveAnim = useRef(new Animated.Value(0.3)).current;
 
   // Sound wave pulsing animation
@@ -83,12 +87,14 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
 
         // Start session & get MediaMTX WHIP URL
         const sessionData = await TalkbackApi.startSession(cameraId);
+        sessionIdRef.current = sessionData.session._id;
 
         // Get microphone stream
         const stream = await mediaDevices.getUserMedia({
           audio: true,
           video: false,
         });
+        localStreamRef.current = stream;
 
         // Initialize WebRTC PeerConnection for audio ingestion
         const pc = new RTCPeerConnection({
@@ -113,7 +119,10 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
       } catch (err: any) {
         console.warn('[Talkback] Error starting talkback session:', err);
         if (isMounted) {
-          Alert.alert('Talkback Unavailable', err.response?.data?.message || err.message || 'Could not connect audio stream.');
+          Alert.alert(
+            'Talkback Unavailable',
+            getApiErrorMessage(err, 'Could not connect audio stream.')
+          );
           navigation.goBack();
         }
       }
@@ -125,12 +134,24 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
       isMounted = false;
       // Stop session
       TalkbackApi.stopSession(cameraId).catch(() => {});
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((t: any) => t.stop());
+      }
       if (pcRef.current) {
         pcRef.current.close();
         pcRef.current = null;
       }
     };
   }, [cameraId, navigation]);
+
+  const handleToggleMute = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach((t: any) => {
+        t.enabled = isMuted;
+      });
+      setIsMuted(!isMuted);
+    }
+  };
 
   const handleEndCall = async () => {
     try {
@@ -154,11 +175,11 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
           ]}
         />
 
-        <View style={styles.micIconBox}>
+        <View style={[styles.micIconBox, isMuted ? { backgroundColor: Colors.warning } : {}]}>
           <AppIcon icon={Mic01Icon} size="xxl" color="#FFFFFF" />
         </View>
 
-        <Text style={styles.title}>TALKBACK ACTIVE</Text>
+        <Text style={styles.title}>{isMuted ? 'MIC MUTED' : 'TALKBACK ACTIVE'}</Text>
         <Text style={styles.cameraName}>{cameraName || 'Assigned Camera'}</Text>
 
         {loading ? (
@@ -174,13 +195,22 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
         )}
 
         <View style={styles.footer}>
-          <Button
-            title="End Talkback Call"
-            variant="destructive"
-            size="large"
-            onPress={handleEndCall}
-            style={styles.endCallBtn}
-          />
+          <View style={styles.buttonRow}>
+            <Button
+              title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
+              variant="outline"
+              size="large"
+              onPress={handleToggleMute}
+              style={styles.muteBtn}
+            />
+            <Button
+              title="End Call"
+              variant="destructive"
+              size="large"
+              onPress={handleEndCall}
+              style={styles.endCallBtn}
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -269,7 +299,16 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 50,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  muteBtn: {
+    flex: 1,
+    marginRight: 10,
+  },
   endCallBtn: {
-    width: '100%',
+    flex: 1,
   },
 });

@@ -20,6 +20,22 @@ import { ProfileScreen } from '../features/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
+const renderDashboardIcon = ({ color }: { color: string }) => (
+  <AppIcon icon={Home01Icon} size={22} color={color} />
+);
+const renderCamerasIcon = ({ color }: { color: string }) => (
+  <AppIcon icon={CameraVideoIcon} size={22} color={color} />
+);
+const renderAlertsIcon = ({ color }: { color: string }) => (
+  <AppIcon icon={BellIcon} size={22} color={color} />
+);
+const renderSosIcon = ({ color }: { color: string }) => (
+  <AppIcon icon={SirenIcon} size={22} color={color} />
+);
+const renderProfileIcon = ({ color }: { color: string }) => (
+  <AppIcon icon={UserIcon} size={22} color={color} />
+);
+
 export const MainTabNavigator: React.FC = () => {
   const { pendingAlerts } = useSelector((state: RootState) => state.alert);
   const { activeSosAlerts } = useSelector((state: RootState) => state.sos);
@@ -39,7 +55,7 @@ export const MainTabNavigator: React.FC = () => {
         component={DashboardScreen}
         options={{
           tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color }) => <AppIcon icon={Home01Icon} size={22} color={color} />,
+          tabBarIcon: renderDashboardIcon,
         }}
       />
 
@@ -48,7 +64,7 @@ export const MainTabNavigator: React.FC = () => {
         component={CameraListScreen}
         options={{
           tabBarLabel: 'Cameras',
-          tabBarIcon: ({ color }) => <AppIcon icon={CameraVideoIcon} size={22} color={color} />,
+          tabBarIcon: renderCamerasIcon,
         }}
       />
 
@@ -59,7 +75,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarLabel: 'Alerts',
           tabBarBadge: pendingAlerts.length > 0 ? pendingAlerts.length : undefined,
           tabBarBadgeStyle: styles.badgeAlert,
-          tabBarIcon: ({ color }) => <AppIcon icon={BellIcon} size={22} color={color} />,
+          tabBarIcon: renderAlertsIcon,
         }}
       />
 
@@ -70,7 +86,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarLabel: 'SOS',
           tabBarBadge: activeSosAlerts.length > 0 ? activeSosAlerts.length : undefined,
           tabBarBadgeStyle: styles.badgeSos,
-          tabBarIcon: ({ color }) => <AppIcon icon={SirenIcon} size={22} color={color} />,
+          tabBarIcon: renderSosIcon,
         }}
       />
 
@@ -79,7 +95,7 @@ export const MainTabNavigator: React.FC = () => {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color }) => <AppIcon icon={UserIcon} size={22} color={color} />,
+          tabBarIcon: renderProfileIcon,
         }}
       />
     </Tab.Navigator>

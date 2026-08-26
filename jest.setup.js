@@ -87,3 +87,14 @@ jest.mock('react-native-svg', () => {
     G: (props) => React.createElement('G', props, props.children),
   };
 });
+
+jest.mock('./src/services/socket.service', () => ({
+  socketService: {
+    connect: jest.fn().mockResolvedValue(undefined),
+    disconnect: jest.fn(),
+    joinCamera: jest.fn(),
+    leaveCamera: jest.fn(),
+    on: jest.fn().mockReturnValue(() => {}),
+    isConnected: jest.fn().mockReturnValue(true),
+  },
+}));

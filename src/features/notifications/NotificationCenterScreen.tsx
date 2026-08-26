@@ -22,6 +22,7 @@ import {
 } from '../../store/slices/notificationSlice';
 import { NotificationItem } from '../../types/notification.types';
 import { formatRelativeTime } from '../../utils/date';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface NotificationCenterScreenProps {
   navigation: any;
@@ -39,7 +40,7 @@ export const NotificationCenterScreen: React.FC<NotificationCenterScreenProps> =
       const data = await NotificationApi.getNotifications({ page: 1, limit: 40 });
       dispatch(setNotifications(data.notifications));
     } catch (e) {
-      console.warn('[Notifications] Error loading notifications:', e);
+      console.warn('[Notifications] Failed to load notifications:', getApiErrorMessage(e));
     }
   };
 
@@ -58,7 +59,7 @@ export const NotificationCenterScreen: React.FC<NotificationCenterScreenProps> =
       await NotificationApi.markAllAsRead();
       dispatch(markAllNotificationsAsRead());
     } catch (e) {
-      console.warn('[Notifications] Mark all read failed:', e);
+      console.warn('[Notifications] Mark all read failed:', getApiErrorMessage(e));
     }
   };
 
@@ -67,7 +68,9 @@ export const NotificationCenterScreen: React.FC<NotificationCenterScreenProps> =
       try {
         await NotificationApi.markAsRead(item._id);
         dispatch(markNotificationAsRead(item._id));
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[Notifications] Mark read failed:', getApiErrorMessage(e));
+      }
     }
   };
 
@@ -75,7 +78,9 @@ export const NotificationCenterScreen: React.FC<NotificationCenterScreenProps> =
     try {
       await NotificationApi.deleteNotification(id);
       dispatch(removeNotification(id));
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[Notifications] Delete notification failed:', getApiErrorMessage(e));
+    }
   };
 
   const renderItem = ({ item }: { item: NotificationItem }) => (

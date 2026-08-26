@@ -25,7 +25,7 @@ import { StatusPill } from '../../components/common/StatusPill';
 import { Button } from '../../components/common/Button';
 import { AppIcon } from '../../components/common/AppIcon';
 import { IncidentApi } from '../../api/endpoints/incident.api';
-import { Incident, IncidentNote } from '../../types/incident.types';
+import { Incident } from '../../types/incident.types';
 import { formatDateTime } from '../../utils/date';
 import { getApiErrorMessage } from '../../utils/error';
 
@@ -78,7 +78,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
       ? incident.assignedTo._id
       : incident?.assignedTo;
 
-  const isAssignedToMe = assignedId === user?.userId;
+  const isAssignedToMe = assignedId === user?._id;
 
   const handleStatusUpdate = async (newStatus: 'investigating' | 'resolved') => {
     setActionLoading(true);
@@ -188,6 +188,15 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
           </View>
 
           <Text style={styles.incidentDesc}>{incident.description}</Text>
+
+          <View style={styles.assigneeRow}>
+            <Text style={styles.assigneeText}>
+              Assigned:{' '}
+              <Text style={styles.assigneeHighlight}>
+                {isAssignedToMe ? 'You (Current Operator)' : (typeof incident.assignedTo === 'object' && incident.assignedTo !== null ? (incident.assignedTo as any).name : 'Unassigned')}
+              </Text>
+            </Text>
+          </View>
 
           {cameraObj && (
             <TouchableOpacity
@@ -384,6 +393,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 20,
+  },
+  assigneeRow: {
+    marginTop: 8,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  assigneeText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+  },
+  assigneeHighlight: {
+    color: Colors.textPrimary,
+    fontWeight: '700',
   },
   cameraRow: {
     marginTop: 12,

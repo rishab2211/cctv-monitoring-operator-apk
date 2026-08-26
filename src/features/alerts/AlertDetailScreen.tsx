@@ -27,6 +27,7 @@ import { AlertApi } from '../../api/endpoints/alert.api';
 import { alertAcknowledgedSuccess, alertResolvedSuccess } from '../../store/slices/alertSlice';
 import { Alert as AlertType } from '../../types/alert.types';
 import { formatDateTime } from '../../utils/date';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface AlertDetailScreenProps {
   navigation: any;
@@ -56,7 +57,7 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
       const data = await AlertApi.getAlertById(alertId);
       setAlert(data);
     } catch (e: any) {
-      Alert.alert('Error', 'Failed to load alert details.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Failed to load alert details.'));
     } finally {
       setLoading(false);
     }

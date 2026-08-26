@@ -21,6 +21,7 @@ import { StorageService } from '../../services/storage.service';
 import { socketService } from '../../services/socket.service';
 import { loginSuccess, setError, setLoading } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface LoginScreenProps {
   navigation: any;
@@ -68,8 +69,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       // Update Redux state
       dispatch(loginSuccess({ user: data.user }));
     } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || 'Login failed. Please verify credentials.';
+      const errorMsg = getApiErrorMessage(
+        err,
+        'Login failed. Please verify credentials.'
+      );
       dispatch(setError(errorMsg));
       Alert.alert('Authentication Failed', errorMsg);
     }
@@ -95,6 +98,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
         {/* Login Form */}
         <View style={styles.form}>
+          {error && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorBoxText}>{error}</Text>
+            </View>
+          )}
+
           <Text style={styles.label}>Email or Phone</Text>
           <TextInput
             autoCapitalize="none"
@@ -215,6 +224,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: 20,
+  },
+  errorBox: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: Colors.critical,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 14,
+  },
+  errorBoxText: {
+    color: Colors.critical,
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   label: {
     fontSize: 13,

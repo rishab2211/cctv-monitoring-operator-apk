@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -40,7 +40,7 @@ const RootStack = createNativeStackNavigator();
 
 export const RootNavigator: React.FC = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [initializing, setInitializing] = useState(true);
 
   // Silent session hydration & socket connection
@@ -69,7 +69,9 @@ export const RootNavigator: React.FC = () => {
                 if (franchise?.name) {
                   dispatch(setFranchiseName(franchise.name));
                 }
-              } catch (e) {}
+              } catch {
+                // Non-critical if franchise lookup fails
+              }
             }
           }
         }
@@ -85,7 +87,7 @@ export const RootNavigator: React.FC = () => {
 
   if (initializing) {
     return (
-      <View style={{ flex: 1, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={styles.initializingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
@@ -136,3 +138,12 @@ export const RootNavigator: React.FC = () => {
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  initializingContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

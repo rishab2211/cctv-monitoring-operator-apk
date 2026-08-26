@@ -13,6 +13,7 @@ import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Button } from '../../components/common/Button';
 import { AuthApi } from '../../api/endpoints/auth.api';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface OTPVerificationScreenProps {
   navigation: any;
@@ -58,7 +59,7 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
         resetToken: data.resetToken,
       });
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Invalid or expired OTP code.';
+      const msg = getApiErrorMessage(err, 'Invalid or expired OTP code.');
       Alert.alert('Verification Failed', msg);
     } finally {
       setLoading(false);
@@ -72,7 +73,7 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
       setResendTimer(60);
       Alert.alert('Sent', 'A new verification code has been dispatched to your email.');
     } catch (err: any) {
-      Alert.alert('Error', 'Failed to resend code. Please wait a moment.');
+      Alert.alert('Error', getApiErrorMessage(err, 'Failed to resend code. Please wait a moment.'));
     }
   };
 

@@ -1,8 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { ENV } from '../config/env';
 import { StorageService } from './storage.service';
-import { Alert } from '../types/alert.types';
-import { SOSAlert } from '../types/sos.types';
 
 type EventHandler = (data: any) => void;
 

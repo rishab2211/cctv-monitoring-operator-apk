@@ -29,6 +29,7 @@ import { SOSApi } from '../../api/endpoints/sos.api';
 import { sosAcknowledgedRealtime, sosResolvedRealtime } from '../../store/slices/sosSlice';
 import { SOSAlert } from '../../types/sos.types';
 import { formatDateTime } from '../../utils/date';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface SOSDetailScreenProps {
   navigation: any;
@@ -61,7 +62,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
       const data = await SOSApi.getSosById(sosId);
       setSos(data);
     } catch (e: any) {
-      Alert.alert('Error', 'Failed to load SOS incident details.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Failed to load SOS incident details.'));
     } finally {
       setLoading(false);
     }
@@ -79,7 +80,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
       dispatch(sosAcknowledgedRealtime(updated));
       Alert.alert('Acknowledged', 'SOS state moved to Acknowledged.');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Could not acknowledge SOS.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not acknowledge SOS.'));
     } finally {
       setActionLoading(false);
     }
@@ -94,7 +95,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
       setSos((prev) => (prev ? { ...prev, notes } : prev));
       setNoteText('');
     } catch (e: any) {
-      Alert.alert('Note Error', e.response?.data?.message || 'Failed to attach investigation note.');
+      Alert.alert('Note Error', getApiErrorMessage(e, 'Failed to attach investigation note.'));
     } finally {
       setNoteLoading(false);
     }
@@ -114,7 +115,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
       setResolveModalVisible(false);
       Alert.alert('Emergency Resolved', 'SOS alert has been formally closed.');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Could not resolve SOS.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not resolve SOS.'));
     } finally {
       setActionLoading(false);
     }

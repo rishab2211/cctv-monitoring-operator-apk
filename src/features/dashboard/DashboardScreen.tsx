@@ -39,7 +39,6 @@ import {
 } from '../../store/slices/shiftSlice';
 import { setActiveSosAlerts } from '../../store/slices/sosSlice';
 import { formatDateTime, formatDuration } from '../../utils/date';
-import { HandoverBannerData } from '../../types/shift.types';
 
 interface DashboardScreenProps {
   navigation: any;

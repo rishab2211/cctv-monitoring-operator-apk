@@ -1,4 +1,4 @@
-import { MD3DarkTheme, configureFonts } from 'react-native-paper';
+import { MD3DarkTheme } from 'react-native-paper';
 import { Colors } from './colors';
 
 export const AppTheme = {

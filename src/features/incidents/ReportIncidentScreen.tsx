@@ -10,16 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSelector } from 'react-redux';
 import {
   AlertDiamondIcon,
   CameraVideoIcon,
   File01Icon,
   LockIcon,
-  ShieldCheckIcon,
   Wrench01Icon,
 } from '@hugeicons/core-free-icons';
-import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Button } from '../../components/common/Button';

@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
-  AlertCircleIcon,
   CassetteTapeIcon,
   Location01Icon,
   Mic01Icon,
@@ -34,7 +32,6 @@ interface CameraDetailScreenProps {
 
 export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, navigation }) => {
   const { cameraId } = route.params;
-  const dispatch = useDispatch();
 
   const reduxCamera = useSelector((state: RootState) =>
     state.camera.cameras.find((c) => c._id === cameraId) || state.camera.selectedCamera

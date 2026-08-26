@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Alert02Icon,
   AlertCircleIcon,
   BellIcon,
   CheckmarkCircle02Icon,
