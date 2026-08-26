@@ -11,12 +11,19 @@ import {
   View,
 } from 'react-native';
 import { useSelector } from 'react-redux';
+import {
+  CameraVideoIcon,
+  Chart01Icon,
+  ChevronRightIcon,
+  TimelineIcon,
+} from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { StatusPill } from '../../components/common/StatusPill';
 import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { IncidentApi } from '../../api/endpoints/incident.api';
 import { Incident, IncidentNote } from '../../types/incident.types';
 import { formatDateTime } from '../../utils/date';
@@ -72,17 +79,12 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
     return assignedId === user?._id;
   };
 
-  const handleUpdateStatus = async (newStatus: 'investigating' | 'resolved') => {
-    if (!isAssignedToMe()) {
-      Alert.alert('Permission Denied', 'You must be assigned to this incident to update its status.');
-      return;
-    }
-
+  const handleStatusUpdate = async (newStatus: 'investigating' | 'resolved') => {
     setActionLoading(true);
     try {
       const updated = await IncidentApi.updateStatus(incidentId, { status: newStatus });
       setIncident(updated);
-      Alert.alert('Status Updated', `Incident status is now: ${newStatus.toUpperCase()}`);
+      Alert.alert('Status Updated', `Incident status set to ${newStatus}.`);
     } catch (e: any) {
       Alert.alert('Error', e.response?.data?.message || 'Could not update status.');
     } finally {
@@ -92,13 +94,14 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
 
   const handleAddNote = async () => {
     if (!noteText.trim()) return;
+
     setNoteLoading(true);
     try {
       const notes = await IncidentApi.addNote(incidentId, noteText.trim());
       setIncident((prev) => (prev ? { ...prev, notes } : prev));
       setNoteText('');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to append note.');
+    } catch (e: any) {
+      Alert.alert('Error', 'Could not post note.');
     } finally {
       setNoteLoading(false);
     }
@@ -129,9 +132,9 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
     }
   };
 
-  const handleConfirmClose = async () => {
+  const handleCloseIncident = async () => {
     if (!closeNotes.trim()) {
-      Alert.alert('Resolution Notes Required', 'Please enter closing notes to conclude this incident.');
+      Alert.alert('Closure Notes Required', 'Please enter your final resolution summary.');
       return;
     }
 
@@ -140,7 +143,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
       const updated = await IncidentApi.closeIncident(incidentId, closeNotes.trim());
       setIncident(updated);
       setCloseModalVisible(false);
-      Alert.alert('Incident Closed', 'The incident has been formally resolved and closed.');
+      Alert.alert('Incident Closed', 'Incident has been formally closed.');
     } catch (e: any) {
       Alert.alert('Error', e.response?.data?.message || 'Could not close incident.');
     } finally {
@@ -163,8 +166,8 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
   return (
     <View style={styles.container}>
       <Header
-        title="Incident Report"
-        subtitle={`ID: #${incident._id.slice(-6)}`}
+        title="Incident Record"
+        subtitle={`Case #${incident._id.slice(-6).toUpperCase()}`}
         onBack={() => navigation.goBack()}
         rightAction={<StatusPill label={incident.status} variant={incident.status as any} size="small" />}
       />
@@ -185,7 +188,11 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
               onPress={() => navigation.navigate('LiveView', { cameraId: cameraObj._id, cameraName: cameraObj.name })}
               style={styles.cameraRow}
             >
-              <Text style={styles.cameraText}>📹 Linked Camera: {cameraObj.name} ›</Text>
+              <View style={styles.cameraContent}>
+                <AppIcon icon={CameraVideoIcon} size="xs" color={Colors.primaryLight} />
+                <Text style={styles.cameraText}>Linked Camera: {cameraObj.name}</Text>
+              </View>
+              <AppIcon icon={ChevronRightIcon} size="xs" color={Colors.primaryLight} />
             </TouchableOpacity>
           )}
         </Card>
@@ -193,16 +200,18 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
         {/* Action Row */}
         <View style={styles.quickActionRow}>
           <Button
-            title="📊 Generate Report"
+            title="Generate Report"
             variant="outline"
             size="small"
+            icon={<AppIcon icon={Chart01Icon} size="xs" color={Colors.primaryLight} />}
             onPress={handleGenerateReport}
             style={styles.subBtn}
           />
           <Button
-            title="📰 View Timeline"
+            title="View Timeline"
             variant="secondary"
             size="small"
+            icon={<AppIcon icon={TimelineIcon} size="xs" color={Colors.textPrimary} />}
             onPress={() => navigation.navigate('IncidentTimeline', { incidentId })}
             style={styles.subBtn}
           />
@@ -260,7 +269,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
                 title="Start Investigation"
                 variant="primary"
                 loading={actionLoading}
-                onPress={() => handleUpdateStatus('investigating')}
+                onPress={() => handleStatusUpdate('investigating')}
                 style={styles.actionBtn}
               />
             )}
@@ -270,7 +279,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
                 title="Mark as Resolved"
                 variant="primary"
                 loading={actionLoading}
-                onPress={() => handleUpdateStatus('resolved')}
+                onPress={() => handleStatusUpdate('resolved')}
                 style={styles.actionBtn}
               />
             )}
@@ -327,7 +336,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
                 title="Close Case"
                 variant="destructive"
                 loading={actionLoading}
-                onPress={handleConfirmClose}
+                onPress={handleCloseIncident}
                 style={styles.modalBtn}
               />
             </View>
@@ -374,11 +383,20 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: Colors.surfaceElevated,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cameraContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   cameraText: {
     fontSize: 13,
     fontWeight: '700',
     color: Colors.primaryLight,
+    marginLeft: 6,
   },
   quickActionRow: {
     flexDirection: 'row',

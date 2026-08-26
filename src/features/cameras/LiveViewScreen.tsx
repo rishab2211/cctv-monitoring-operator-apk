@@ -8,7 +8,17 @@ import {
   View,
 } from 'react-native';
 import { RTCPeerConnection, RTCView, MediaStream } from 'react-native-webrtc';
+import {
+  Alert02Icon,
+  Camera01Icon,
+  Cancel01Icon,
+  FileEditIcon,
+  Mic01Icon,
+  VolumeHighIcon,
+  VolumeMute01Icon,
+} from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
+import { AppIcon } from '../../components/common/AppIcon';
 import { CameraApi } from '../../api/endpoints/camera.api';
 
 interface LiveViewScreenProps {
@@ -58,7 +68,6 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
             if (isMounted) {
               setRemoteStream(event.streams[0]);
               setStreamUrl(event.streams[0].toURL());
-              setLoading(false);
             }
           }
         };
@@ -86,8 +95,9 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
         console.warn('[LiveView] WebRTC connection error:', err);
         if (isMounted) {
           setErrorMsg(err.response?.data?.message || 'Live camera stream unreachable.');
-          setLoading(false);
         }
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
 
@@ -97,7 +107,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
       isMounted = false;
       // Step 5: Stop session on close
       if (sessionIdRef.current) {
-        CameraApi.stopStream(cameraId, sessionIdRef.current);
+        CameraApi.stopStream(cameraId, sessionIdRef.current).catch(() => null);
       }
       if (peerConnection.current) {
         peerConnection.current.close();
@@ -106,8 +116,13 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
     };
   }, [cameraId]);
 
-  const handleSnapshot = () => {
-    Alert.alert('Snapshot Captured', 'A high-definition security frame has been saved to your gallery.');
+  const handleSnapshot = async () => {
+    try {
+      await CameraApi.triggerSnapshot(cameraId);
+      Alert.alert('Snapshot Saved', 'Live frame captured to server storage.');
+    } catch (e: any) {
+      Alert.alert('Snapshot Failed', e.response?.data?.message || 'Could not trigger frame capture.');
+    }
   };
 
   return (
@@ -130,7 +145,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
               </View>
             ) : (
               <View style={styles.errorBox}>
-                <Text style={styles.errorEmoji}>⚠️</Text>
+                <AppIcon icon={Alert02Icon} size="xl" color={Colors.warning} />
                 <Text style={styles.errorText}>{errorMsg || 'Stream currently unavailable.'}</Text>
               </View>
             )}
@@ -145,7 +160,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
           onPress={() => navigation.goBack()}
           style={styles.controlBtn}
         >
-          <Text style={styles.controlIcon}>✕</Text>
+          <AppIcon icon={Cancel01Icon} size="sm" color="#FFFFFF" />
         </TouchableOpacity>
 
         <View style={styles.streamInfo}>
@@ -159,7 +174,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
         </View>
 
         <TouchableOpacity activeOpacity={0.8} onPress={handleSnapshot} style={styles.controlBtn}>
-          <Text style={styles.controlIcon}>📸</Text>
+          <AppIcon icon={Camera01Icon} size="sm" color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
@@ -170,7 +185,12 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
           onPress={() => setIsMuted(!isMuted)}
           style={[styles.bottomBtn, isMuted ? { backgroundColor: Colors.critical } : {}]}
         >
-          <Text style={styles.bottomBtnText}>{isMuted ? '🔇 Unmute' : '🔊 Mute'}</Text>
+          <AppIcon
+            icon={isMuted ? VolumeMute01Icon : VolumeHighIcon}
+            size="xs"
+            color="#FFFFFF"
+          />
+          <Text style={styles.bottomBtnText}>{isMuted ? 'Unmute' : 'Mute'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -183,7 +203,8 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
           }
           style={[styles.bottomBtn, { backgroundColor: Colors.secondary }]}
         >
-          <Text style={styles.bottomBtnText}>🎙️ Talkback</Text>
+          <AppIcon icon={Mic01Icon} size="xs" color="#FFFFFF" />
+          <Text style={styles.bottomBtnText}>Talkback</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -195,7 +216,8 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
           }
           style={[styles.bottomBtn, { backgroundColor: Colors.surfaceElevated }]}
         >
-          <Text style={styles.bottomBtnText}>📝 Report</Text>
+          <AppIcon icon={FileEditIcon} size="xs" color="#FFFFFF" />
+          <Text style={styles.bottomBtnText}>Report</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -308,9 +330,11 @@ const styles = StyleSheet.create({
   },
   bottomBtn: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: 12,
-    alignItems: 'center',
     marginHorizontal: 4,
     backgroundColor: Colors.surface,
     borderWidth: 1,
@@ -320,5 +344,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '800',
+    marginLeft: 6,
   },
 });

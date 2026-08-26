@@ -8,9 +8,11 @@ import {
   View,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { BellIcon, Delete02Icon } from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
+import { AppIcon } from '../../components/common/AppIcon';
 import { NotificationApi } from '../../api/endpoints/notification.api';
 import {
   markAllNotificationsAsRead,
@@ -95,7 +97,12 @@ export const NotificationCenterScreen: React.FC<NotificationCenterScreenProps> =
       <Text style={styles.body}>{item.body}</Text>
 
       <View style={styles.footerRow}>
-        <TouchableOpacity activeOpacity={0.7} onPress={() => handleDelete(item._id)}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => handleDelete(item._id)}
+          style={styles.deleteBtn}
+        >
+          <AppIcon icon={Delete02Icon} size="xs" color={Colors.critical} />
           <Text style={styles.deleteText}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -125,7 +132,7 @@ export const NotificationCenterScreen: React.FC<NotificationCenterScreenProps> =
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>🔔</Text>
+            <AppIcon icon={BellIcon} size="xxl" color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>No Notifications</Text>
             <Text style={styles.emptySub}>You are all caught up on system and camera alerts.</Text>
           </View>
@@ -202,24 +209,27 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginTop: 8,
   },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+  },
   deleteText: {
     fontSize: 11,
     color: Colors.critical,
     fontWeight: '600',
+    marginLeft: 4,
   },
   emptyBox: {
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 60,
   },
-  emptyEmoji: {
-    fontSize: 40,
-    marginBottom: 10,
-  },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '800',
     color: Colors.textPrimary,
+    marginTop: 12,
   },
   emptySub: {
     fontSize: 13,

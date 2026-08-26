@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { LaptopIcon } from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { AuthApi } from '../../api/endpoints/auth.api';
 import { DeviceSession } from '../../types/auth.types';
 import { formatDateTime } from '../../utils/date';
@@ -99,9 +101,12 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
       <View style={[styles.sessionCard, isCurrent ? styles.currentCard : {}]}>
         <View style={styles.sessionHeader}>
           <View>
-            <Text style={styles.deviceName}>
-              💻 {item.deviceName || `${item.os || 'Device'} • ${item.browser || 'Client'}`}
-            </Text>
+            <View style={styles.deviceRow}>
+              <AppIcon icon={LaptopIcon} size="xs" color={isCurrent ? Colors.primaryLight : Colors.textSecondary} />
+              <Text style={styles.deviceName}>
+                {item.deviceName || `${item.os || 'Device'} • ${item.browser || 'Client'}`}
+              </Text>
+            </View>
             <Text style={styles.ipText}>IP: {item.ipAddress || '127.0.0.1'}</Text>
           </View>
           {isCurrent && (
@@ -185,10 +190,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  deviceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   deviceName: {
     fontSize: 14,
     fontWeight: '800',
     color: Colors.textPrimary,
+    marginLeft: 6,
   },
   ipText: {
     fontSize: 12,

@@ -7,9 +7,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {
+  Add01Icon,
+  AlertDiamondIcon,
+  CameraVideoIcon,
+  ClipboardIcon,
+  File01Icon,
+  LockIcon,
+  ShieldCheckIcon,
+  Wrench01Icon,
+} from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { StatusPill } from '../../components/common/StatusPill';
+import { AppIcon } from '../../components/common/AppIcon';
 import { IncidentApi } from '../../api/endpoints/incident.api';
 import { Incident, IncidentStatus } from '../../types/incident.types';
 import { formatRelativeTime } from '../../utils/date';
@@ -49,15 +60,15 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
   const getIncidentIcon = (type: string) => {
     switch (type) {
       case 'theft':
-        return '🔒';
+        return { icon: LockIcon, color: Colors.critical };
       case 'vandalism':
-        return '🏚️';
+        return { icon: AlertDiamondIcon, color: Colors.warning };
       case 'safety':
-        return '🦺';
+        return { icon: ShieldCheckIcon, color: Colors.online };
       case 'maintenance':
-        return '🔧';
+        return { icon: Wrench01Icon, color: Colors.info };
       default:
-        return '📄';
+        return { icon: File01Icon, color: Colors.textSecondary };
     }
   };
 
@@ -66,6 +77,8 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
       typeof item.cameraId === 'object' && item.cameraId !== null
         ? item.cameraId.name
         : 'General Incident';
+
+    const iconData = getIncidentIcon(item.type);
 
     return (
       <TouchableOpacity
@@ -76,12 +89,17 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
         <View style={styles.cardHeader}>
           <View style={styles.titleArea}>
             <View style={styles.iconTitleRow}>
-              <Text style={styles.typeIcon}>{getIncidentIcon(item.type)}</Text>
+              <View style={styles.typeIconBox}>
+                <AppIcon icon={iconData.icon} size="md" color={iconData.color} />
+              </View>
               <Text numberOfLines={1} style={styles.title}>
                 {item.title}
               </Text>
             </View>
-            <Text style={styles.cameraName}>📹 {cameraName}</Text>
+            <View style={styles.cameraRow}>
+              <AppIcon icon={CameraVideoIcon} size="xs" color={Colors.textMuted} />
+              <Text style={styles.cameraName}>{cameraName}</Text>
+            </View>
           </View>
           <StatusPill label={item.severity} variant={item.severity as any} size="small" />
         </View>
@@ -110,7 +128,8 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
             onPress={() => navigation.navigate('ReportIncident')}
             style={styles.createBtn}
           >
-            <Text style={styles.createBtnText}>+ New Report</Text>
+            <AppIcon icon={Add01Icon} size="xs" color="#FFFFFF" />
+            <Text style={styles.createBtnText}>New Report</Text>
           </TouchableOpacity>
         }
       />
@@ -139,7 +158,7 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>📋</Text>
+            <AppIcon icon={ClipboardIcon} size="xxl" color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>No Incidents Found</Text>
             <Text style={styles.emptySub}>No incidents match your selected filter.</Text>
           </View>
@@ -155,6 +174,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   createBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -164,6 +185,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#FFFFFF',
+    marginLeft: 4,
   },
   filterRow: {
     flexDirection: 'row',
@@ -219,9 +241,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  typeIcon: {
-    fontSize: 18,
+  typeIconBox: {
     marginRight: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 15,
@@ -229,10 +252,15 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     flex: 1,
   },
+  cameraRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   cameraName: {
     fontSize: 12,
     color: Colors.textMuted,
-    marginTop: 4,
+    marginLeft: 4,
   },
   desc: {
     fontSize: 13,

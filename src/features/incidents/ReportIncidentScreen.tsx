@@ -11,10 +11,19 @@ import {
   View,
 } from 'react-native';
 import { useSelector } from 'react-redux';
+import {
+  AlertDiamondIcon,
+  CameraVideoIcon,
+  File01Icon,
+  LockIcon,
+  ShieldCheckIcon,
+  Wrench01Icon,
+} from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { IncidentApi } from '../../api/endpoints/incident.api';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import { Camera } from '../../types/camera.types';
@@ -51,7 +60,7 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim()) {
-      Alert.alert('Required Fields', 'Please provide a title and detailed description.');
+      Alert.alert('Required Fields', 'Please enter an incident title and detailed description.');
       return;
     }
 
@@ -66,17 +75,15 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
         formData.append('cameraId', selectedCameraId);
       }
 
-      const created = await IncidentApi.createIncident(formData);
+      await IncidentApi.createIncident(formData);
 
       Alert.alert(
         'Incident Logged',
-        `Incident #${created._id.slice(-6)} has been recorded and dispatched to active queues.`,
+        'Your security report has been recorded and submitted for audit.',
         [
           {
-            text: 'View Report',
-            onPress: () => {
-              navigation.replace('IncidentDetail', { incidentId: created._id });
-            },
+            text: 'OK',
+            onPress: () => navigation.goBack(),
           },
         ]
       );
@@ -87,12 +94,12 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
     }
   };
 
-  const incidentTypes: Array<{ key: IncidentType; label: string }> = [
-    { key: 'theft', label: '🔒 Theft' },
-    { key: 'vandalism', label: '🏚️ Vandalism' },
-    { key: 'safety', label: '🦺 Safety' },
-    { key: 'maintenance', label: '🔧 Maintenance' },
-    { key: 'other', label: '📄 Other' },
+  const incidentTypes: Array<{ key: IncidentType; label: string; icon: any }> = [
+    { key: 'theft', label: 'Theft', icon: LockIcon },
+    { key: 'vandalism', label: 'Vandalism', icon: AlertDiamondIcon },
+    { key: 'safety', label: 'Safety', icon: ShieldCheckIcon },
+    { key: 'maintenance', label: 'Maintenance', icon: Wrench01Icon },
+    { key: 'other', label: 'Other', icon: File01Icon },
   ];
 
   const severityLevels: Array<{ key: IncidentSeverity; label: string }> = [
@@ -135,18 +142,26 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
           {/* Incident Type Picker */}
           <Text style={[styles.label, { marginTop: 16 }]}>Incident Category</Text>
           <View style={styles.chipRow}>
-            {incidentTypes.map((t) => (
-              <TouchableOpacity
-                key={t.key}
-                activeOpacity={0.8}
-                onPress={() => setType(t.key)}
-                style={[styles.chip, type === t.key ? styles.activeChip : {}]}
-              >
-                <Text style={[styles.chipText, type === t.key ? styles.activeChipText : {}]}>
-                  {t.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {incidentTypes.map((t) => {
+              const isSelected = type === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  activeOpacity={0.8}
+                  onPress={() => setType(t.key)}
+                  style={[styles.chip, isSelected ? styles.activeChip : {}]}
+                >
+                  <AppIcon
+                    icon={t.icon}
+                    size="xs"
+                    color={isSelected ? '#FFFFFF' : Colors.textSecondary}
+                  />
+                  <Text style={[styles.chipText, isSelected ? styles.activeChipText : {}]}>
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           {/* Severity Picker */}
@@ -182,18 +197,26 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
               </Text>
             </TouchableOpacity>
 
-            {cameras.map((c) => (
-              <TouchableOpacity
-                key={c._id}
-                activeOpacity={0.8}
-                onPress={() => setSelectedCameraId(c._id)}
-                style={[styles.chip, selectedCameraId === c._id ? styles.activeChip : {}]}
-              >
-                <Text style={[styles.chipText, selectedCameraId === c._id ? styles.activeChipText : {}]}>
-                  📹 {c.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {cameras.map((c) => {
+              const isSelected = selectedCameraId === c._id;
+              return (
+                <TouchableOpacity
+                  key={c._id}
+                  activeOpacity={0.8}
+                  onPress={() => setSelectedCameraId(c._id)}
+                  style={[styles.chip, isSelected ? styles.activeChip : {}]}
+                >
+                  <AppIcon
+                    icon={CameraVideoIcon}
+                    size="xs"
+                    color={isSelected ? '#FFFFFF' : Colors.textSecondary}
+                  />
+                  <Text style={[styles.chipText, isSelected ? styles.activeChipText : {}]}>
+                    {c.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
 
           <Button
@@ -258,6 +281,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,
@@ -275,6 +300,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: Colors.textSecondary,
+    marginLeft: 4,
   },
   activeChipText: {
     color: '#FFFFFF',

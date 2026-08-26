@@ -10,10 +10,18 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+  CameraVideoIcon,
+  Location01Icon,
+  Mic01Icon,
+  PlayIcon,
+  Search01Icon,
+} from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { StatusPill } from '../../components/common/StatusPill';
+import { AppIcon } from '../../components/common/AppIcon';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import { socketService } from '../../services/socket.service';
 import { setCameras, setSelectedCamera, setStatusFilter } from '../../store/slices/cameraSlice';
@@ -70,7 +78,7 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
     return (
       <TouchableOpacity
         key={filter}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
         onPress={() => dispatch(setStatusFilter(filter))}
         style={[
           styles.filterChip,
@@ -104,16 +112,20 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={styles.locationText}>
-          📍 {item.location?.street || item.location?.city ? `${item.location.street || ''} ${item.location.city || ''}` : 'Location unconfigured'}
-        </Text>
+        <View style={styles.locationRow}>
+          <AppIcon icon={Location01Icon} size="xs" color={Colors.textMuted} />
+          <Text numberOfLines={1} style={styles.locationText}>
+            {item.location?.street || item.location?.city ? `${item.location.street || ''} ${item.location.city || ''}` : 'Location unconfigured'}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.cardFooter}>
         <View style={styles.tagRow}>
           {item.settings?.talkbackEnabled && (
             <View style={styles.talkbackBadge}>
-              <Text style={styles.talkbackBadgeText}>🎙️ Talkback</Text>
+              <AppIcon icon={Mic01Icon} size="xs" color={Colors.secondary} />
+              <Text style={styles.talkbackBadgeText}>Talkback</Text>
             </View>
           )}
           {item.settings?.recordingEnabled && (
@@ -128,7 +140,8 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
           onPress={() => navigation.navigate('LiveView', { cameraId: item._id, cameraName: item.name })}
           style={styles.watchLiveBtn}
         >
-          <Text style={styles.watchLiveText}>▶ Watch Live</Text>
+          <AppIcon icon={PlayIcon} size="xs" color="#FFFFFF" />
+          <Text style={styles.watchLiveText}>Watch Live</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -140,13 +153,16 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
 
       {/* Search Input */}
       <View style={styles.searchContainer}>
-        <TextInput
-          placeholder="Search by name, serial number, or city..."
-          placeholderTextColor={Colors.textMuted}
-          style={styles.searchInput}
-          value={search}
-          onChangeText={setSearch}
-        />
+        <View style={styles.searchBox}>
+          <AppIcon icon={Search01Icon} size="sm" color={Colors.textMuted} />
+          <TextInput
+            placeholder="Search by name, serial number, or city..."
+            placeholderTextColor={Colors.textMuted}
+            style={styles.searchInput}
+            value={search}
+            onChangeText={setSearch}
+          />
+        </View>
       </View>
 
       {/* Filter Tabs */}
@@ -166,7 +182,7 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>📹</Text>
+            <AppIcon icon={CameraVideoIcon} size="xxl" color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>No Cameras Found</Text>
             <Text style={styles.emptySub}>No cameras match your active search or status filter.</Text>
           </View>
@@ -185,13 +201,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
   },
-  searchInput: {
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
+  },
+  searchInput: {
+    flex: 1,
     paddingVertical: 10,
+    paddingHorizontal: 8,
     color: Colors.textPrimary,
     fontSize: 14,
   },
@@ -249,9 +271,15 @@ const styles = StyleSheet.create({
   cardBody: {
     marginVertical: 10,
   },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   locationText: {
     fontSize: 13,
     color: Colors.textSecondary,
+    marginLeft: 6,
+    flex: 1,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -267,6 +295,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   talkbackBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(99, 102, 241, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -277,6 +307,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: Colors.secondary,
+    marginLeft: 4,
   },
   recBadge: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
@@ -290,6 +321,8 @@ const styles = StyleSheet.create({
     color: Colors.critical,
   },
   watchLiveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -299,6 +332,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#FFFFFF',
+    marginLeft: 4,
   },
   emptyContainer: {
     alignItems: 'center',

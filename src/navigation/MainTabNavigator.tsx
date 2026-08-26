@@ -1,9 +1,17 @@
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
+import {
+  BellIcon,
+  CameraVideoIcon,
+  Home01Icon,
+  SirenIcon,
+  UserIcon,
+} from '@hugeicons/core-free-icons';
 import { RootState } from '../store';
 import { Colors } from '../theme/colors';
+import { AppIcon } from '../components/common/AppIcon';
 import { DashboardScreen } from '../features/dashboard/DashboardScreen';
 import { CameraListScreen } from '../features/cameras/CameraListScreen';
 import { AlertListScreen } from '../features/alerts/AlertListScreen';
@@ -31,7 +39,7 @@ export const MainTabNavigator: React.FC = () => {
         component={DashboardScreen}
         options={{
           tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color }) => <Text style={[styles.tabEmoji, { color }]}>🏠</Text>,
+          tabBarIcon: ({ color }) => <AppIcon icon={Home01Icon} size={22} color={color} />,
         }}
       />
 
@@ -40,7 +48,7 @@ export const MainTabNavigator: React.FC = () => {
         component={CameraListScreen}
         options={{
           tabBarLabel: 'Cameras',
-          tabBarIcon: ({ color }) => <Text style={[styles.tabEmoji, { color }]}>📹</Text>,
+          tabBarIcon: ({ color }) => <AppIcon icon={CameraVideoIcon} size={22} color={color} />,
         }}
       />
 
@@ -51,7 +59,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarLabel: 'Alerts',
           tabBarBadge: pendingAlerts.length > 0 ? pendingAlerts.length : undefined,
           tabBarBadgeStyle: styles.badgeAlert,
-          tabBarIcon: ({ color }) => <Text style={[styles.tabEmoji, { color }]}>🔔</Text>,
+          tabBarIcon: ({ color }) => <AppIcon icon={BellIcon} size={22} color={color} />,
         }}
       />
 
@@ -62,7 +70,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarLabel: 'SOS',
           tabBarBadge: activeSosAlerts.length > 0 ? activeSosAlerts.length : undefined,
           tabBarBadgeStyle: styles.badgeSos,
-          tabBarIcon: ({ color }) => <Text style={[styles.tabEmoji, { color }]}>🆘</Text>,
+          tabBarIcon: ({ color }) => <AppIcon icon={SirenIcon} size={22} color={color} />,
         }}
       />
 
@@ -71,7 +79,7 @@ export const MainTabNavigator: React.FC = () => {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color }) => <Text style={[styles.tabEmoji, { color }]}>👤</Text>,
+          tabBarIcon: ({ color }) => <AppIcon icon={UserIcon} size={22} color={color} />,
         }}
       />
     </Tab.Navigator>
@@ -90,9 +98,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     marginBottom: 4,
-  },
-  tabEmoji: {
-    fontSize: 20,
   },
   badgeAlert: {
     backgroundColor: Colors.warning,

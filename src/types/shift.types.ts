@@ -1,9 +1,23 @@
 export interface ActiveShift {
   _id: string;
-  operatorId: string;
+  shiftId?: string;
+  operatorId?: string;
   startTime: string;
   endTime?: string;
-  status: 'active' | 'completed';
+  durationMs?: number;
+  durationSeconds?: number;
+  status?: 'active' | 'completed';
+  handoverNotes?: string;
+  incidentsResolved?: number;
+  sosAcknowledged?: number;
+}
+
+export interface LastShiftInfo {
+  _id: string;
+  startTime: string;
+  endTime: string;
+  durationSeconds?: number;
+  durationMs?: number;
   handoverNotes?: string;
   incidentsResolved?: number;
   sosAcknowledged?: number;
@@ -16,13 +30,7 @@ export interface ShiftStatusResponse {
     startTime: string;
   } | null;
   durationMs?: number;
-  lastShift?: {
-    _id: string;
-    startTime: string;
-    endTime: string;
-    durationSeconds: number;
-    handoverNotes?: string;
-  } | null;
+  lastShift?: LastShiftInfo | null;
 }
 
 export interface ShiftHistoryItem {
@@ -30,7 +38,8 @@ export interface ShiftHistoryItem {
   operatorId: string;
   startTime: string;
   endTime: string;
-  durationSeconds: number;
+  durationSeconds?: number;
+  durationMs?: number;
   incidentsResolved?: number;
   sosAcknowledged?: number;
   handoverNotes?: string;
@@ -44,7 +53,24 @@ export interface OperatorDashboardStats {
 }
 
 export interface OperatorDashboardResponse {
-  operatorName: string;
+  operator?: {
+    _id: string;
+    name: string;
+  };
+  operatorName?: string;
   stats: OperatorDashboardStats;
+  shift?: {
+    shiftId: string;
+    startTime: string;
+    durationMs: number;
+  } | null;
   currentShift?: ActiveShift | null;
+}
+
+export interface HandoverBannerData {
+  operatorId?: string;
+  operatorName?: string;
+  shiftId?: string;
+  handoverNotes: string;
+  timestamp: string;
 }

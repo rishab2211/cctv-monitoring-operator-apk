@@ -5,41 +5,58 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  CassetteTapeIcon,
+  Location01Icon,
+  Mic01Icon,
+  PlayIcon,
+} from '@hugeicons/core-free-icons';
+import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { StatusPill } from '../../components/common/StatusPill';
 import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { CameraApi } from '../../api/endpoints/camera.api';
-import { Camera } from '../../types/camera.types';
+import { Camera, CameraHealth } from '../../types/camera.types';
 
 interface CameraDetailScreenProps {
+  route: any;
   navigation: any;
-  route: {
-    params: {
-      cameraId: string;
-    };
-  };
 }
 
-export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({
-  navigation,
-  route,
-}) => {
+export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, navigation }) => {
   const { cameraId } = route.params;
-  const [camera, setCamera] = useState<Camera | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+
+  const reduxCamera = useSelector((state: RootState) =>
+    state.camera.cameras.find((c) => c._id === cameraId) || state.camera.selectedCamera
+  );
+
+  const [camera, setCamera] = useState<Camera | null>(reduxCamera || null);
+  const [loading, setLoading] = useState(!reduxCamera);
+
+  const [health, setHealth] = useState<CameraHealth>({
+    cpuUsage: reduxCamera?.health?.cpuUsage || 0,
+    memoryUsage: reduxCamera?.health?.memoryUsage || 0,
+    temperature: reduxCamera?.health?.temperature || 0,
+    storageUsage: reduxCamera?.health?.storageUsage || 0,
+    lastPing: reduxCamera?.health?.lastPing || null,
+  });
 
   const loadCamera = async () => {
     try {
-      setLoading(true);
-      const data = await CameraApi.getCameraById(cameraId);
-      setCamera(data);
-    } catch (e: any) {
-      Alert.alert('Error', 'Failed to load camera telemetry details.');
+      const fetched = await CameraApi.getCameraById(cameraId);
+      setCamera(fetched);
+      if (fetched.health) {
+        setHealth(fetched.health);
+      }
+    } catch (e) {
+      console.warn('[CameraDetail] Error loading camera details:', e);
     } finally {
       setLoading(false);
     }
@@ -47,23 +64,29 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({
 
   useEffect(() => {
     loadCamera();
+    const interval = setInterval(loadCamera, 15000); // 15-second telemetry polling
+    return () => clearInterval(interval);
   }, [cameraId]);
 
-  if (loading || !camera) {
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Header title="Camera Telemetry" onBack={() => navigation.goBack()} />
+        <Header title="Camera Details" onBack={() => navigation.goBack()} />
         <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
       </View>
     );
   }
 
-  const health = camera.health || {
-    cpuUsage: 0,
-    memoryUsage: 0,
-    temperature: 0,
-    storageUsage: 0,
-  };
+  if (!camera) {
+    return (
+      <View style={styles.container}>
+        <Header title="Camera Details" onBack={() => navigation.goBack()} />
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>Camera not found or unassigned.</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -80,6 +103,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({
           <Button
             title="Watch Live Stream"
             variant="primary"
+            icon={<AppIcon icon={PlayIcon} size="sm" color="#FFFFFF" />}
             onPress={() =>
               navigation.navigate('LiveView', { cameraId: camera._id, cameraName: camera.name })
             }
@@ -89,8 +113,9 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({
           <View style={styles.subActionRow}>
             {camera.settings?.talkbackEnabled && (
               <Button
-                title="🎙️ Talkback"
+                title="Talkback"
                 variant="secondary"
+                icon={<AppIcon icon={Mic01Icon} size="sm" color={Colors.textPrimary} />}
                 onPress={() =>
                   navigation.navigate('TalkbackActive', {
                     cameraId: camera._id,
@@ -101,8 +126,9 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({
               />
             )}
             <Button
-              title="📼 Playback"
+              title="Playback"
               variant="outline"
+              icon={<AppIcon icon={CassetteTapeIcon} size="sm" color={Colors.primaryLight} />}
               onPress={() =>
                 navigation.navigate('RecordingPlayback', {
                   cameraId: camera._id,
@@ -117,10 +143,13 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({
         {/* Location Card */}
         <Text style={styles.sectionTitle}>Location</Text>
         <Card variant="elevated">
-          <Text style={styles.locationText}>
-            📍 {camera.location?.street || 'Street not set'}, {camera.location?.city || 'City not set'},{' '}
-            {camera.location?.state || ''} {camera.location?.pincode || ''}
-          </Text>
+          <View style={styles.locationRow}>
+            <AppIcon icon={Location01Icon} size="sm" color={Colors.primaryLight} />
+            <Text style={styles.locationText}>
+              {camera.location?.street || 'Street not set'}, {camera.location?.city || 'City not set'},{' '}
+              {camera.location?.state || ''} {camera.location?.pincode || ''}
+            </Text>
+          </View>
           {camera.location?.latitude && (
             <Text style={styles.coordsText}>
               Coordinates: {camera.location.latitude.toFixed(4)}, {camera.location.longitude?.toFixed(4)}
@@ -204,6 +233,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+  },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
@@ -231,10 +270,17 @@ const styles = StyleSheet.create({
     marginTop: 14,
     marginBottom: 8,
   },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   locationText: {
     fontSize: 14,
     color: Colors.textPrimary,
     lineHeight: 20,
+    marginLeft: 8,
+    flex: 1,
   },
   coordsText: {
     fontSize: 12,

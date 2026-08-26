@@ -12,8 +12,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
+import { Camera01Icon, EyeIcon, EyeOffIcon } from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { AuthApi } from '../../api/endpoints/auth.api';
 import { StorageService } from '../../services/storage.service';
 import { socketService } from '../../services/socket.service';
@@ -82,7 +84,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         {/* App Branding & Badge */}
         <View style={styles.header}>
           <View style={styles.iconBadge}>
-            <Text style={styles.badgeEmoji}>📹</Text>
+            <AppIcon icon={Camera01Icon} size="xl" color={Colors.primaryLight} />
           </View>
           <Text style={styles.appName}>CCTV MONITOR</Text>
           <Text style={styles.appSubtitle}>Operator Command Client</Text>
@@ -115,7 +117,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               onChangeText={setPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-              <Text style={styles.eyeText}>{showPassword ? '👁️' : '🔒'}</Text>
+              <AppIcon
+                icon={showPassword ? EyeOffIcon : EyeIcon}
+                size="sm"
+                color={Colors.textSecondary}
+              />
             </TouchableOpacity>
           </View>
 

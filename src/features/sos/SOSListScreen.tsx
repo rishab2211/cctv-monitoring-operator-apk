@@ -8,10 +8,18 @@ import {
   View,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+  ChevronRightIcon,
+  Location01Icon,
+  Message01Icon,
+  ShieldCheckIcon,
+  SirenIcon,
+} from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { StatusPill } from '../../components/common/StatusPill';
+import { AppIcon } from '../../components/common/AppIcon';
 import { SOSApi } from '../../api/endpoints/sos.api';
 import { setActiveSosAlerts } from '../../store/slices/sosSlice';
 import { SOSAlert } from '../../types/sos.types';
@@ -51,11 +59,12 @@ export const SOSListScreen: React.FC<SOSListScreenProps> = ({ navigation }) => {
   };
 
   const renderSosCard = ({ item }: { item: SOSAlert }) => {
-    const isActive = item.status === 'active';
     const userName =
       typeof item.triggeredBy === 'object' && item.triggeredBy !== null
         ? item.triggeredBy.name
-        : 'Customer';
+        : 'Emergency User';
+
+    const isActive = item.status === 'active';
 
     return (
       <TouchableOpacity
@@ -68,7 +77,9 @@ export const SOSListScreen: React.FC<SOSListScreenProps> = ({ navigation }) => {
       >
         <View style={styles.cardHeader}>
           <View style={styles.userRow}>
-            <Text style={styles.sosEmoji}>🆘</Text>
+            <View style={styles.sosIconBox}>
+              <AppIcon icon={SirenIcon} size="md" color={Colors.critical} />
+            </View>
             <View>
               <Text style={styles.userName}>{userName}</Text>
               <Text style={styles.timeAgo}>{formatRelativeTime(item.createdAt)}</Text>
@@ -81,15 +92,24 @@ export const SOSListScreen: React.FC<SOSListScreenProps> = ({ navigation }) => {
           />
         </View>
 
-        <Text numberOfLines={2} style={styles.locationText}>
-          📍 {item.location || 'Location coordinates not provided'}
-        </Text>
+        <View style={styles.locationRow}>
+          <AppIcon icon={Location01Icon} size="xs" color={Colors.textMuted} />
+          <Text numberOfLines={2} style={styles.locationText}>
+            {item.location || 'Location coordinates not provided'}
+          </Text>
+        </View>
 
         <View style={styles.cardFooter}>
-          <Text style={styles.notesCount}>
-            💬 {item.notes?.length || 0} investigation notes
-          </Text>
-          <Text style={styles.viewDetail}>Respond / View Details ›</Text>
+          <View style={styles.notesCountRow}>
+            <AppIcon icon={Message01Icon} size="xs" color={Colors.textMuted} />
+            <Text style={styles.notesCount}>
+              {item.notes?.length || 0} investigation notes
+            </Text>
+          </View>
+          <View style={styles.viewDetailRow}>
+            <Text style={styles.viewDetail}>Respond / Details</Text>
+            <AppIcon icon={ChevronRightIcon} size="xs" color={Colors.primaryLight} />
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -110,7 +130,7 @@ export const SOSListScreen: React.FC<SOSListScreenProps> = ({ navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.critical} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>🛡️</Text>
+            <AppIcon icon={ShieldCheckIcon} size="xxl" color={Colors.online} />
             <Text style={styles.emptyTitle}>No SOS Alerts</Text>
             <Text style={styles.emptySub}>No active emergency panics reported in your franchise territory.</Text>
           </View>
@@ -151,9 +171,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  sosEmoji: {
-    fontSize: 24,
+  sosIconBox: {
     marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   userName: {
     fontSize: 16,
@@ -165,10 +186,16 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: 2,
   },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
   locationText: {
     fontSize: 13,
     color: Colors.textSecondary,
-    marginVertical: 10,
+    marginLeft: 6,
+    flex: 1,
     lineHeight: 18,
   },
   cardFooter: {
@@ -179,23 +206,29 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.surfaceElevated,
     paddingTop: 10,
   },
+  notesCountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   notesCount: {
     fontSize: 12,
     color: Colors.textSecondary,
+    marginLeft: 4,
+  },
+  viewDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   viewDetail: {
     fontSize: 12,
     fontWeight: '700',
     color: Colors.primaryLight,
+    marginRight: 2,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 60,
-  },
-  emptyEmoji: {
-    fontSize: 40,
-    marginBottom: 12,
   },
   emptyTitle: {
     fontSize: 16,

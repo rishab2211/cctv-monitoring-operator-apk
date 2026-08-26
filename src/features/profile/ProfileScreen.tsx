@@ -8,11 +8,23 @@ import {
   View,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+  BellIcon,
+  Building01Icon,
+  ChevronRightIcon,
+  Clock01Icon,
+  LaptopIcon,
+  LockIcon,
+  Mic01Icon,
+  SmartPhone01Icon,
+  TimelineIcon,
+} from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
+import { AppIcon, IconSvgElement } from '../../components/common/AppIcon';
 import { AuthApi } from '../../api/endpoints/auth.api';
 import { StorageService } from '../../services/storage.service';
 import { socketService } from '../../services/socket.service';
@@ -43,18 +55,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   const renderSettingItem = (
-    emoji: string,
+    icon: IconSvgElement,
     title: string,
     subtitle: string,
-    onPress: () => void
+    onPress: () => void,
+    iconColor: string = Colors.primaryLight
   ) => (
     <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={styles.settingItem}>
-      <Text style={styles.itemEmoji}>{emoji}</Text>
+      <View style={styles.itemIconBox}>
+        <AppIcon icon={icon} size="md" color={iconColor} />
+      </View>
       <View style={styles.itemTextContainer}>
         <Text style={styles.itemTitle}>{title}</Text>
         <Text style={styles.itemSub}>{subtitle}</Text>
       </View>
-      <Text style={styles.chevron}>›</Text>
+      <AppIcon icon={ChevronRightIcon} size="xs" color={Colors.textMuted} />
     </TouchableOpacity>
   );
 
@@ -80,11 +95,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{user?.name || 'Operator'}</Text>
             <Text style={styles.userEmail}>{user?.email}</Text>
-            <Text style={styles.userPhone}>📱 {user?.phone || 'Phone unset'}</Text>
+            <View style={styles.phoneBadgeRow}>
+              <AppIcon icon={SmartPhone01Icon} size="xs" color={Colors.textSecondary} />
+              <Text style={styles.userPhone}>{user?.phone || 'Phone unset'}</Text>
+            </View>
 
             <View style={styles.franchiseBadge}>
+              <AppIcon icon={Building01Icon} size="xs" color={Colors.primaryLight} />
               <Text style={styles.franchiseText}>
-                🏢 {franchiseName || 'Standard Franchise Territory'}
+                {franchiseName || 'Standard Franchise Territory'}
               </Text>
             </View>
           </View>
@@ -93,13 +112,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         {/* Operational Records */}
         <Text style={styles.sectionHeader}>Operational Records</Text>
         <Card variant="elevated">
-          {renderSettingItem('⏱', 'My Shift History', 'Logs of past clock-in & duration times', () =>
+          {renderSettingItem(Clock01Icon, 'My Shift History', 'Logs of past clock-in & duration times', () =>
             navigation.navigate('ShiftHistory')
           )}
-          {renderSettingItem('🎙️', 'Talkback Call History', 'Log of two-way audio communications', () =>
-            navigation.navigate('CallHistory')
+          {renderSettingItem(Mic01Icon, 'Talkback Call History', 'Log of two-way audio communications', () =>
+            navigation.navigate('CallHistory'),
+            Colors.secondary
           )}
-          {renderSettingItem('📰', 'Activity Audit Trail', 'Chronological security events', () =>
+          {renderSettingItem(TimelineIcon, 'Activity Audit Trail', 'Chronological security events', () =>
             navigation.navigate('Timeline')
           )}
         </Card>
@@ -107,13 +127,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         {/* Security & Settings */}
         <Text style={styles.sectionHeader}>Security & Preferences</Text>
         <Card variant="elevated">
-          {renderSettingItem('🔔', 'Notification Preferences', 'Push, In-App & Email alerts', () =>
-            navigation.navigate('NotificationPreferences')
+          {renderSettingItem(BellIcon, 'Notification Preferences', 'Push, In-App & Email alerts', () =>
+            navigation.navigate('NotificationPreferences'),
+            Colors.warning
           )}
-          {renderSettingItem('💻', 'Active Device Sessions', 'Manage logged-in devices', () =>
+          {renderSettingItem(LaptopIcon, 'Active Device Sessions', 'Manage logged-in devices', () =>
             navigation.navigate('ActiveSessions')
           )}
-          {renderSettingItem('🔒', 'Change Password', 'Update your authentication password', () =>
+          {renderSettingItem(LockIcon, 'Change Password', 'Update your authentication password', () =>
             navigation.navigate('ChangePassword')
           )}
         </Card>
@@ -174,12 +195,19 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 2,
   },
+  phoneBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+  },
   userPhone: {
     fontSize: 12,
     color: Colors.textMuted,
-    marginTop: 2,
+    marginLeft: 4,
   },
   franchiseBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(59, 130, 246, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -191,6 +219,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: Colors.primaryLight,
+    marginLeft: 4,
   },
   sectionHeader: {
     fontSize: 13,
@@ -208,9 +237,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.surfaceLight,
   },
-  itemEmoji: {
-    fontSize: 20,
+  itemIconBox: {
     marginRight: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   itemTextContainer: {
     flex: 1,
@@ -224,10 +254,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
     marginTop: 2,
-  },
-  chevron: {
-    fontSize: 20,
-    color: Colors.textMuted,
   },
   logoutBtn: {
     marginTop: 30,

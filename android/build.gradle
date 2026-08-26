@@ -1,11 +1,12 @@
 buildscript {
     ext {
-        buildToolsVersion = "37.0.0"
+        buildToolsVersion = "36.0.0"
         minSdkVersion = 24
         compileSdkVersion = 37
         targetSdkVersion = 36
         ndkVersion = "27.1.12297006"
         kotlinVersion = "2.2.0"
+        REACT_NATIVE_NODE_MODULES_DIR = "${rootDir}/../node_modules/react-native"
     }
     repositories {
         google()
@@ -19,3 +20,31 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+def configureSubproject(Project subproject) {
+    if (subproject.plugins.hasPlugin('com.android.library') || subproject.plugins.hasPlugin('android-library')) {
+        subproject.android {
+            compileSdkVersion rootProject.ext.compileSdkVersion
+            buildToolsVersion rootProject.ext.buildToolsVersion
+        }
+    }
+}
+
+subprojects { subproject ->
+    if (subproject == rootProject) return
+
+    if (subproject.state.executed) {
+        configureSubproject(subproject)
+    } else {
+        subproject.afterEvaluate {
+            configureSubproject(subproject)
+        }
+    }
+}

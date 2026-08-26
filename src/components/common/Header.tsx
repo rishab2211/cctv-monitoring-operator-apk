@@ -1,7 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
+import { AppIcon } from './AppIcon';
 
 interface HeaderProps {
   title: string;
@@ -25,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
       <View style={styles.contentRow}>
         {onBack && (
           <TouchableOpacity activeOpacity={0.7} onPress={onBack} style={styles.backButton}>
-            <Text style={styles.backIcon}>‹</Text>
+            <AppIcon icon={ArrowLeft01Icon} size="md" color={Colors.textPrimary} />
           </TouchableOpacity>
         )}
         <View style={styles.titleContainer}>
@@ -56,15 +58,11 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: 12,
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: 8,
     backgroundColor: Colors.surfaceElevated,
-  },
-  backIcon: {
-    fontSize: 28,
-    color: Colors.textPrimary,
-    lineHeight: 28,
-    fontWeight: '300',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   titleContainer: {
     flex: 1,

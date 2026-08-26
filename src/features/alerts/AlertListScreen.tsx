@@ -8,10 +8,20 @@ import {
   View,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+  Alert02Icon,
+  AlertCircleIcon,
+  BellIcon,
+  CheckmarkCircle02Icon,
+  FireIcon,
+  SirenIcon,
+  Wrench01Icon,
+} from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { StatusPill } from '../../components/common/StatusPill';
+import { AppIcon } from '../../components/common/AppIcon';
 import { AlertApi } from '../../api/endpoints/alert.api';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import {
@@ -68,15 +78,15 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'motion':
-        return '🚨';
+        return { icon: SirenIcon, color: Colors.critical };
       case 'fire':
-        return '🔥';
+        return { icon: FireIcon, color: Colors.critical };
       case 'hazard':
-        return '⚠️';
+        return { icon: AlertCircleIcon, color: Colors.warning };
       case 'tampering':
-        return '🔧';
+        return { icon: Wrench01Icon, color: Colors.warning };
       default:
-        return '🔔';
+        return { icon: BellIcon, color: Colors.info };
     }
   };
 
@@ -85,6 +95,8 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
       typeof item.cameraId === 'object' && item.cameraId !== null
         ? item.cameraId.name
         : 'Assigned Camera';
+
+    const iconData = getAlertIcon(item.type);
 
     return (
       <TouchableOpacity
@@ -97,7 +109,9 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
       >
         <View style={styles.cardHeader}>
           <View style={styles.iconTitleRow}>
-            <Text style={styles.alertIcon}>{getAlertIcon(item.type)}</Text>
+            <View style={styles.alertIconBox}>
+              <AppIcon icon={iconData.icon} size="md" color={iconData.color} />
+            </View>
             <View>
               <Text style={styles.cameraTitle}>{cameraName}</Text>
               <Text style={styles.relativeTime}>{formatRelativeTime(item.createdAt)}</Text>
@@ -119,7 +133,8 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
               onPress={() => handleAcknowledge(item._id)}
               style={styles.ackBtn}
             >
-              <Text style={styles.ackBtnText}>✓ Acknowledge</Text>
+              <AppIcon icon={CheckmarkCircle02Icon} size="xs" color="#000000" />
+              <Text style={styles.ackBtnText}>Acknowledge</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -164,7 +179,7 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>✅</Text>
+            <AppIcon icon={CheckmarkCircle02Icon} size="xxl" color={Colors.online} />
             <Text style={styles.emptyTitle}>
               {activeTab === 'pending' ? 'All Clear' : 'No Active Alerts'}
             </Text>
@@ -234,9 +249,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  alertIcon: {
-    fontSize: 22,
+  alertIconBox: {
     marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cameraTitle: {
     fontSize: 15,
@@ -263,15 +279,18 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   ackBtn: {
-    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.online,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   ackBtnText: {
-    fontSize: 12,
+    color: '#000000',
     fontWeight: '800',
-    color: '#FFFFFF',
+    fontSize: 12,
+    marginLeft: 4,
   },
   emptyContainer: {
     alignItems: 'center',

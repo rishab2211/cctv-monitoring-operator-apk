@@ -8,8 +8,10 @@ import {
   View,
 } from 'react-native';
 import { mediaDevices, RTCPeerConnection } from 'react-native-webrtc';
+import { Mic01Icon } from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { TalkbackApi } from '../../api/endpoints/talkback.api';
 import { formatDuration } from '../../utils/date';
 
@@ -153,7 +155,7 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
         />
 
         <View style={styles.micIconBox}>
-          <Text style={styles.micEmoji}>🎙️</Text>
+          <AppIcon icon={Mic01Icon} size="xxl" color="#FFFFFF" />
         </View>
 
         <Text style={styles.title}>TALKBACK ACTIVE</Text>

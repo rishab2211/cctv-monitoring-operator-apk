@@ -8,9 +8,18 @@ import {
   Text,
   View,
 } from 'react-native';
+import {
+  Analytics01Icon,
+  Chart01Icon,
+  ClipboardIcon,
+  Clock01Icon,
+  FileEditIcon,
+  SirenIcon,
+} from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
+import { AppIcon } from '../../components/common/AppIcon';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import { OperatorReportsResponse, ReportShiftItem } from '../../types/reports.types';
 import { formatDateTime, formatDuration } from '../../utils/date';
@@ -71,14 +80,23 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
       </View>
 
       <View style={styles.shiftStatsRow}>
-        <Text style={styles.statMetric}>📋 Incidents: {item.incidentsResolved}</Text>
-        <Text style={styles.statMetric}>🆘 SOS Handled: {item.sosAcknowledged}</Text>
+        <View style={styles.statMetricRow}>
+          <AppIcon icon={ClipboardIcon} size="xs" color={Colors.primaryLight} />
+          <Text style={styles.statMetric}>Incidents: {item.incidentsResolved}</Text>
+        </View>
+        <View style={styles.statMetricRow}>
+          <AppIcon icon={SirenIcon} size="xs" color={Colors.critical} />
+          <Text style={styles.statMetric}>SOS Handled: {item.sosAcknowledged}</Text>
+        </View>
       </View>
 
       {item.handoverNotes && (
-        <Text numberOfLines={2} style={styles.handoverText}>
-          📝 "{item.handoverNotes}"
-        </Text>
+        <View style={styles.handoverRow}>
+          <AppIcon icon={FileEditIcon} size="xs" color={Colors.textMuted} />
+          <Text numberOfLines={2} style={styles.handoverText}>
+            "{item.handoverNotes}"
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -98,25 +116,25 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
         {/* KPI Cards Row */}
         <View style={styles.kpiGrid}>
           <View style={styles.kpiCard}>
-            <Text style={styles.kpiEmoji}>⏱</Text>
+            <AppIcon icon={Clock01Icon} size="md" color={Colors.primaryLight} />
             <Text style={styles.kpiValue}>{summary.totalShifts}</Text>
             <Text style={styles.kpiLabel}>Total Shifts</Text>
           </View>
 
           <View style={styles.kpiCard}>
-            <Text style={styles.kpiEmoji}>📋</Text>
+            <AppIcon icon={ClipboardIcon} size="md" color={Colors.online} />
             <Text style={styles.kpiValue}>{summary.totalIncidentsResolved}</Text>
             <Text style={styles.kpiLabel}>Incidents Resolved</Text>
           </View>
 
           <View style={styles.kpiCard}>
-            <Text style={styles.kpiEmoji}>🆘</Text>
+            <AppIcon icon={SirenIcon} size="md" color={Colors.critical} />
             <Text style={styles.kpiValue}>{summary.totalSosAcknowledged}</Text>
             <Text style={styles.kpiLabel}>SOS Handled</Text>
           </View>
 
           <View style={styles.kpiCard}>
-            <Text style={styles.kpiEmoji}>📈</Text>
+            <AppIcon icon={Analytics01Icon} size="md" color={Colors.warning} />
             <Text style={styles.kpiValue}>{summary.avgIncidentsPerShift}</Text>
             <Text style={styles.kpiLabel}>Avg / Shift</Text>
           </View>
@@ -132,7 +150,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
           ))
         ) : (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>📊</Text>
+            <AppIcon icon={Chart01Icon} size="xxl" color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>No Shift Records</Text>
             <Text style={styles.emptySub}>Clock in to shifts to generate historical performance metrics.</Text>
           </View>
@@ -227,30 +245,38 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.surfaceElevated,
   },
+  statMetricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   statMetric: {
     fontSize: 12,
     color: Colors.textSecondary,
     fontWeight: '600',
+    marginLeft: 4,
+  },
+  handoverRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
   },
   handoverText: {
     fontSize: 12,
     color: Colors.textMuted,
-    marginTop: 6,
+    marginLeft: 4,
     fontStyle: 'italic',
+    flex: 1,
   },
   emptyBox: {
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 40,
   },
-  emptyEmoji: {
-    fontSize: 40,
-    marginBottom: 10,
-  },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '800',
     color: Colors.textPrimary,
+    marginTop: 12,
   },
   emptySub: {
     fontSize: 13,

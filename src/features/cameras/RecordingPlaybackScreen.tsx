@@ -10,9 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {
+  CassetteTapeIcon,
+  Clock01Icon,
+  Download01Icon,
+} from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
-import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { CameraApi } from '../../api/endpoints/camera.api';
 import { RecordingChunk, RecordingTimelineItem } from '../../types/camera.types';
 
@@ -74,9 +79,12 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
     <View style={styles.chunkCard}>
       <View style={styles.chunkHeader}>
         <View>
-          <Text style={styles.chunkTime}>
-            ⏱ {new Date(item.startTime).toLocaleTimeString()} - {new Date(item.endTime).toLocaleTimeString()}
-          </Text>
+          <View style={styles.chunkTimeRow}>
+            <AppIcon icon={Clock01Icon} size="xs" color={Colors.textSecondary} />
+            <Text style={styles.chunkTime}>
+              {new Date(item.startTime).toLocaleTimeString()} - {new Date(item.endTime).toLocaleTimeString()}
+            </Text>
+          </View>
           <Text style={styles.chunkMeta}>
             Duration: {Math.round(item.durationSeconds / 60)} mins • Type: {item.type}
           </Text>
@@ -86,7 +94,8 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
           onPress={() => handleDownload(item._id)}
           style={styles.downloadBtn}
         >
-          <Text style={styles.downloadText}>⬇ Download</Text>
+          <AppIcon icon={Download01Icon} size="xs" color={Colors.primaryLight} />
+          <Text style={styles.downloadText}>Download</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -129,7 +138,7 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyBox}>
-              <Text style={styles.emptyEmoji}>📼</Text>
+              <AppIcon icon={CassetteTapeIcon} size="xxl" color={Colors.textMuted} />
               <Text style={styles.emptyTitle}>No Recordings Found</Text>
               <Text style={styles.emptySub}>
                 No video footage recorded for this camera on {selectedDate}.
@@ -199,10 +208,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  chunkTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   chunkTime: {
     fontSize: 14,
     fontWeight: '800',
     color: Colors.textPrimary,
+    marginLeft: 6,
   },
   chunkMeta: {
     fontSize: 12,
@@ -210,6 +224,8 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   downloadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.surfaceElevated,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -221,6 +237,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: Colors.primaryLight,
+    marginLeft: 6,
   },
   emptyBox: {
     alignItems: 'center',

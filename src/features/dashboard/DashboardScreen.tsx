@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  AppState,
+  AppStateStatus,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -10,23 +12,34 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+  BellIcon,
+  CameraVideoIcon,
+  Chart01Icon,
+  ClipboardIcon,
+  FileEditIcon,
+  SirenIcon,
+  TimelineIcon,
+} from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Card } from '../../components/common/Card';
 import { StatusPill } from '../../components/common/StatusPill';
 import { Button } from '../../components/common/Button';
 import { BannerAlert } from '../../components/common/BannerAlert';
+import { AppIcon } from '../../components/common/AppIcon';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import { SOSApi } from '../../api/endpoints/sos.api';
+import { socketService } from '../../services/socket.service';
 import {
   clockInSuccess,
-  clockOutSuccess,
   dismissHandoverBanner,
+  setHandoverBanner,
   setShiftStatus,
 } from '../../store/slices/shiftSlice';
-import { setAlertStats } from '../../store/slices/alertSlice';
 import { setActiveSosAlerts } from '../../store/slices/sosSlice';
-import { formatDuration } from '../../utils/date';
+import { formatDateTime, formatDuration } from '../../utils/date';
+import { HandoverBannerData } from '../../types/shift.types';
 
 interface DashboardScreenProps {
   navigation: any;
@@ -37,11 +50,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   const dispatch = useDispatch();
 
   const { user, franchiseName } = useSelector((state: RootState) => state.auth);
-  const { isOnShift, currentShift, handoverBanner } = useSelector((state: RootState) => state.shift);
-  const { urgentBannerAlert, activeSosAlerts } = useSelector((state: RootState) => state.sos);
-  const { stats: alertStats } = useSelector((state: RootState) => state.alert);
+  const { isOnShift, currentShift, lastShift, handoverBanner } = useSelector(
+    (state: RootState) => state.shift
+  );
+  const { urgentBannerAlert } = useSelector((state: RootState) => state.sos);
 
   const [refreshing, setRefreshing] = useState(false);
+  const [clockingIn, setClockingIn] = useState(false);
   const [dashboardStats, setDashboardStats] = useState({
     assignedCameras: 0,
     openIncidents: 0,
@@ -49,7 +64,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   });
   const [liveDuration, setLiveDuration] = useState('00:00:00');
 
-  // Live timer for active shift duration
+  // Live timer for active shift duration (ticking up in real-time)
   useEffect(() => {
     let timer: any = null;
     if (isOnShift && currentShift?.startTime) {
@@ -64,9 +79,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     } else {
       setLiveDuration('00:00:00');
     }
-    return () => clearInterval(timer);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [isOnShift, currentShift]);
 
+  // Load dashboard, shift status, and active SOS data
   const loadDashboardData = useCallback(async () => {
     try {
       const [dashData, shiftData, sosData] = await Promise.all([
@@ -75,7 +93,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         SOSApi.getActiveSosAlerts().catch(() => []),
       ]);
 
-      if (dashData) {
+      if (dashData?.stats) {
         setDashboardStats(dashData.stats);
       }
 
@@ -92,16 +110,54 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       if (sosData) {
         dispatch(setActiveSosAlerts(sosData));
       }
-    } catch (error) {
-      console.warn('[Dashboard] Error fetching dashboard data:', error);
+    } catch (e) {
+      console.warn('Failed to refresh dashboard:', e);
     }
   }, [dispatch]);
 
+  // Initial load and socket listener setup
   useEffect(() => {
     loadDashboardData();
-    const interval = setInterval(loadDashboardData, 60000); // 60s auto-refresh
-    return () => clearInterval(interval);
-  }, [loadDashboardData]);
+
+    // Foreground refresh handler
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        loadDashboardData();
+      }
+    };
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    // Socket real-time events
+    const unsubAlertNew = socketService.on('alert:new', () => {
+      loadDashboardData();
+    });
+    const unsubSosTriggered = socketService.on('sos:triggered', () => {
+      loadDashboardData();
+    });
+    const unsubSosResolved = socketService.on('sos:resolved', () => {
+      loadDashboardData();
+    });
+    const unsubShiftEnded = socketService.on('shift:ended', (data: any) => {
+      if (data?.handoverNotes) {
+        dispatch(
+          setHandoverBanner({
+            operatorName: data.operatorName || 'Outgoing Operator',
+            handoverNotes: data.handoverNotes,
+            timestamp: data.timestamp || data.endTime || new Date().toISOString(),
+          })
+        );
+      }
+      loadDashboardData();
+    });
+
+    return () => {
+      subscription.remove();
+      unsubAlertNew();
+      unsubSosTriggered();
+      unsubSosResolved();
+      unsubShiftEnded();
+    };
+  }, [loadDashboardData, dispatch]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -109,46 +165,49 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     setRefreshing(false);
   };
 
-  const handleClockIn = () => {
-    Alert.alert('Start Shift', 'Are you ready to clock in and begin active monitoring?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Clock In',
-        onPress: async () => {
-          try {
-            const shift = await OperatorApi.startShift();
-            dispatch(clockInSuccess(shift));
-            Alert.alert('Shift Started', 'You are now ON SHIFT. Camera feeds and alerts are synchronized.');
-            loadDashboardData();
-          } catch (e: any) {
-            Alert.alert('Shift Error', e.response?.data?.message || 'Could not start shift.');
-          }
-        },
-      },
-    ]);
+  const handleClockIn = async () => {
+    try {
+      setClockingIn(true);
+      const res = await OperatorApi.startShift();
+      dispatch(clockInSuccess(res));
+      Alert.alert('Shift Started', 'You are now actively on duty.');
+      loadDashboardData();
+    } catch (e: any) {
+      Alert.alert('Clock-in Failed', e.response?.data?.message || 'Could not start shift.');
+    } finally {
+      setClockingIn(false);
+    }
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 12) }]}>
       {/* Top App Bar */}
       <View style={styles.topBar}>
         <View>
           <Text style={styles.greeting}>Welcome back,</Text>
           <Text style={styles.userName}>{user?.name || 'Operator'}</Text>
-          {franchiseName && <Text style={styles.franchise}>{franchiseName}</Text>}
+          {franchiseName ? <Text style={styles.franchise}>{franchiseName}</Text> : null}
         </View>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => navigation.navigate('Notifications')}
           style={styles.notificationBtn}
+          accessibilityLabel="Open notifications"
         >
-          <Text style={styles.bellIcon}>🔔</Text>
+          <AppIcon icon={BellIcon} size="md" color={Colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
       >
         {/* Realtime Urgent SOS Red Banner */}
         {urgentBannerAlert && (
@@ -164,7 +223,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         {/* Realtime Shift Handover Notes Banner */}
         {handoverBanner && (
           <BannerAlert
-            title={`Handover Note from ${handoverBanner.operatorName || 'Operator'}`}
+            title={`Handover Note from ${handoverBanner.operatorName || 'Outgoing Operator'}`}
             message={handoverBanner.handoverNotes}
             variant="info"
             onDismiss={() => dispatch(dismissHandoverBanner())}
@@ -182,11 +241,28 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               />
             </View>
 
-            {isOnShift && (
+            {isOnShift ? (
               <View style={styles.timerRow}>
-                <Text style={styles.timerLabel}>ACTIVE DURATION</Text>
+                <View>
+                  <Text style={styles.timerLabel}>ACTIVE DURATION</Text>
+                  <Text style={styles.timerSub}>
+                    Started at {currentShift?.startTime ? formatDateTime(currentShift.startTime) : 'N/A'}
+                  </Text>
+                </View>
                 <Text style={styles.timerValue}>{liveDuration}</Text>
               </View>
+            ) : (
+              lastShift && (
+                <View style={styles.lastShiftRow}>
+                  <Text style={styles.lastShiftLabel}>LAST SHIFT ENDED</Text>
+                  <Text style={styles.lastShiftValue}>
+                    {formatDateTime(lastShift.endTime)}
+                    {lastShift.durationSeconds
+                      ? ` (${formatDuration(lastShift.durationSeconds)})`
+                      : ''}
+                  </Text>
+                </View>
+              )
             )}
           </View>
 
@@ -195,13 +271,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <Button
                 title="Clock Out & Handover"
                 variant="destructive"
-                onPress={() => navigation.navigate('ClockOutModal')}
+                onPress={() =>
+                  navigation.navigate('ClockOutModal', {
+                    openIncidentsCount: dashboardStats.openIncidents,
+                  })
+                }
                 style={styles.shiftBtn}
               />
             ) : (
               <Button
                 title="Clock In to Shift"
                 variant="primary"
+                loading={clockingIn}
                 onPress={handleClockIn}
                 style={styles.shiftBtn}
               />
@@ -209,7 +290,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           </View>
         </Card>
 
-        {/* Key Metrics Row */}
+        {/* Key Metrics Row with Clear Scoping */}
         <Text style={styles.sectionHeader}>Overview Metrics</Text>
         <View style={styles.statsRow}>
           {/* Assigned Cameras */}
@@ -218,23 +299,29 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             onPress={() => navigation.navigate('CamerasTab')}
             style={[styles.statBox, { borderColor: Colors.border }]}
           >
-            <Text style={styles.statEmoji}>📹</Text>
+            <View style={styles.statIconWrapper}>
+              <AppIcon icon={CameraVideoIcon} size="md" color={Colors.primaryLight} />
+            </View>
             <Text style={styles.statNumber}>{dashboardStats.assignedCameras}</Text>
             <Text style={styles.statLabel}>Assigned Cameras</Text>
+            <Text style={styles.statScope}>My Station</Text>
           </TouchableOpacity>
 
-          {/* My Open Incidents */}
+          {/* My Open Incidents (Operator Scoped) */}
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => navigation.navigate('IncidentList')}
             style={[styles.statBox, { borderColor: Colors.border }]}
           >
-            <Text style={styles.statEmoji}>📋</Text>
+            <View style={styles.statIconWrapper}>
+              <AppIcon icon={ClipboardIcon} size="md" color={Colors.warning} />
+            </View>
             <Text style={styles.statNumber}>{dashboardStats.openIncidents}</Text>
-            <Text style={styles.statLabel}>My Incidents</Text>
+            <Text style={styles.statLabel}>Open Incidents</Text>
+            <Text style={styles.statScope}>Assigned to Me</Text>
           </TouchableOpacity>
 
-          {/* Franchise Active SOS */}
+          {/* Franchise Active SOS (Franchise Scoped) */}
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => navigation.navigate('SOSTab')}
@@ -242,11 +329,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               styles.statBox,
               {
                 borderColor: dashboardStats.activeSos > 0 ? Colors.critical : Colors.border,
-                backgroundColor: dashboardStats.activeSos > 0 ? 'rgba(220, 38, 38, 0.12)' : Colors.surface,
+                backgroundColor:
+                  dashboardStats.activeSos > 0 ? 'rgba(220, 38, 38, 0.12)' : Colors.surface,
               },
             ]}
           >
-            <Text style={styles.statEmoji}>🆘</Text>
+            <View style={styles.statIconWrapper}>
+              <AppIcon
+                icon={SirenIcon}
+                size="md"
+                color={dashboardStats.activeSos > 0 ? Colors.critical : '#A0A0A0'}
+              />
+            </View>
             <Text
               style={[
                 styles.statNumber,
@@ -255,7 +349,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             >
               {dashboardStats.activeSos}
             </Text>
-            <Text style={styles.statLabel}>Active SOS</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                dashboardStats.activeSos > 0 ? { color: Colors.critical } : {},
+              ]}
+            >
+              Active SOS
+            </Text>
+            <Text style={styles.statScope}>Franchise Wide</Text>
           </TouchableOpacity>
         </View>
 
@@ -267,7 +369,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             onPress={() => navigation.navigate('CamerasTab')}
             style={styles.actionCard}
           >
-            <Text style={styles.actionEmoji}>🎯</Text>
+            <View style={styles.actionIconWrapper}>
+              <AppIcon icon={CameraVideoIcon} size="lg" color={Colors.primaryLight} />
+            </View>
             <Text style={styles.actionTitle}>Watch Cameras</Text>
             <Text style={styles.actionDesc}>Live WebRTC & Playback</Text>
           </TouchableOpacity>
@@ -277,7 +381,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             onPress={() => navigation.navigate('AlertsTab')}
             style={styles.actionCard}
           >
-            <Text style={styles.actionEmoji}>🔔</Text>
+            <View style={styles.actionIconWrapper}>
+              <AppIcon icon={BellIcon} size="lg" color={Colors.warning} />
+            </View>
             <Text style={styles.actionTitle}>Pending Alerts</Text>
             <Text style={styles.actionDesc}>Triage & Acknowledge</Text>
           </TouchableOpacity>
@@ -287,7 +393,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             onPress={() => navigation.navigate('ReportIncident')}
             style={styles.actionCard}
           >
-            <Text style={styles.actionEmoji}>📝</Text>
+            <View style={styles.actionIconWrapper}>
+              <AppIcon icon={FileEditIcon} size="lg" color={Colors.secondary} />
+            </View>
             <Text style={styles.actionTitle}>Report Incident</Text>
             <Text style={styles.actionDesc}>File evidence & photos</Text>
           </TouchableOpacity>
@@ -297,7 +405,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             onPress={() => navigation.navigate('Reports')}
             style={styles.actionCard}
           >
-            <Text style={styles.actionEmoji}>📊</Text>
+            <View style={styles.actionIconWrapper}>
+              <AppIcon icon={Chart01Icon} size="lg" color={Colors.info} />
+            </View>
             <Text style={styles.actionTitle}>My Reports</Text>
             <Text style={styles.actionDesc}>30-shift analytics</Text>
           </TouchableOpacity>
@@ -307,7 +417,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             onPress={() => navigation.navigate('Timeline')}
             style={styles.actionCard}
           >
-            <Text style={styles.actionEmoji}>📰</Text>
+            <View style={styles.actionIconWrapper}>
+              <AppIcon icon={TimelineIcon} size="lg" color={Colors.primaryLight} />
+            </View>
             <Text style={styles.actionTitle}>Activity Timeline</Text>
             <Text style={styles.actionDesc}>Audit logs & shifts</Text>
           </TouchableOpacity>
@@ -317,7 +429,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             onPress={() => navigation.navigate('SOSTab')}
             style={styles.actionCard}
           >
-            <Text style={styles.actionEmoji}>🚨</Text>
+            <View style={styles.actionIconWrapper}>
+              <AppIcon icon={SirenIcon} size="lg" color={Colors.critical} />
+            </View>
             <Text style={styles.actionTitle}>SOS Emergency</Text>
             <Text style={styles.actionDesc}>Immediate dispatch</Text>
           </TouchableOpacity>
@@ -406,11 +520,34 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     letterSpacing: 0.5,
   },
+  timerSub: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
   timerValue: {
     fontSize: 20,
     fontWeight: '900',
     color: Colors.online,
     fontVariant: ['tabular-nums'],
+  },
+  lastShiftRow: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: Colors.surfaceLight,
+  },
+  lastShiftLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  lastShiftValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   shiftActionRow: {
     width: '100%',
@@ -442,9 +579,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     alignItems: 'center',
   },
-  statEmoji: {
-    fontSize: 20,
-    marginBottom: 4,
+  statIconWrapper: {
+    marginBottom: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statNumber: {
     fontSize: 22,
@@ -452,11 +590,19 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   statLabel: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: 2,
+  },
+  statScope: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 2,
+    textTransform: 'uppercase',
   },
   quickGrid: {
     flexDirection: 'row',
@@ -472,8 +618,7 @@ const styles = StyleSheet.create({
     padding: 14,
     margin: '2%',
   },
-  actionEmoji: {
-    fontSize: 24,
+  actionIconWrapper: {
     marginBottom: 8,
   },
   actionTitle: {

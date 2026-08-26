@@ -12,11 +12,19 @@ import {
   View,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
+import {
+  Call02Icon,
+  CameraVideoIcon,
+  ChevronRightIcon,
+  Location01Icon,
+  SirenIcon,
+} from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { StatusPill } from '../../components/common/StatusPill';
 import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { SOSApi } from '../../api/endpoints/sos.api';
 import { sosAcknowledgedRealtime, sosResolvedRealtime } from '../../store/slices/sosSlice';
 import { SOSAlert } from '../../types/sos.types';
@@ -53,7 +61,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
       const data = await SOSApi.getSosById(sosId);
       setSos(data);
     } catch (e: any) {
-      Alert.alert('Error', 'Failed to load SOS emergency event details.');
+      Alert.alert('Error', 'Failed to load SOS incident details.');
     } finally {
       setLoading(false);
     }
@@ -69,7 +77,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
       const updated = await SOSApi.acknowledgeSos(sosId);
       setSos(updated);
       dispatch(sosAcknowledgedRealtime(updated));
-      Alert.alert('Acknowledged', 'Emergency acknowledged. You are assigned as the responding operator.');
+      Alert.alert('Acknowledged', 'SOS state moved to Acknowledged.');
     } catch (e: any) {
       Alert.alert('Error', e.response?.data?.message || 'Could not acknowledge SOS.');
     } finally {
@@ -79,13 +87,14 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
 
   const handleAddNote = async () => {
     if (!noteText.trim()) return;
+
     setNoteLoading(true);
     try {
       const notes = await SOSApi.addNote(sosId, noteText.trim());
       setSos((prev) => (prev ? { ...prev, notes } : prev));
       setNoteText('');
     } catch (e: any) {
-      Alert.alert('Error', 'Could not add note to SOS emergency log.');
+      Alert.alert('Note Error', e.response?.data?.message || 'Failed to attach investigation note.');
     } finally {
       setNoteLoading(false);
     }
@@ -93,7 +102,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
 
   const handleConfirmResolve = async () => {
     if (!resolutionNotes.trim()) {
-      Alert.alert('Mandatory Field', 'Please provide detailed resolution notes before closing the SOS event.');
+      Alert.alert('Resolution Notes Required', 'Please enter your closure notes before resolving this emergency.');
       return;
     }
 
@@ -103,9 +112,9 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
       setSos(updated);
       dispatch(sosResolvedRealtime({ sosId }));
       setResolveModalVisible(false);
-      Alert.alert('Resolved', 'Emergency event has been formally resolved.');
+      Alert.alert('Emergency Resolved', 'SOS alert has been formally closed.');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Could not resolve emergency.');
+      Alert.alert('Error', e.response?.data?.message || 'Could not resolve SOS.');
     } finally {
       setActionLoading(false);
     }
@@ -114,28 +123,22 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
   if (loading || !sos) {
     return (
       <View style={styles.loadingContainer}>
-        <Header title="Emergency SOS" onBack={() => navigation.goBack()} />
+        <Header title="SOS Panic Details" onBack={() => navigation.goBack()} />
         <ActivityIndicator size="large" color={Colors.critical} style={{ marginTop: 40 }} />
       </View>
     );
   }
 
   const userObj = typeof sos.triggeredBy === 'object' && sos.triggeredBy !== null ? sos.triggeredBy : null;
-  const cameraObj = typeof sos.cameraId === 'object' && sos.cameraId !== null ? sos.cameraId : null;
+  const cameraObj = typeof sos.cameraId === 'object' && sos.cameraId !== null ? (sos.cameraId as any) : null;
 
   return (
     <View style={styles.container}>
       <Header
-        title="SOS Emergency Response"
-        subtitle={`Alert #${sos._id.slice(-6)}`}
+        title="Emergency SOS"
+        subtitle={`Alert #${sos._id.slice(-6).toUpperCase()}`}
         onBack={() => navigation.goBack()}
-        rightAction={
-          <StatusPill
-            label={sos.status}
-            variant={sos.status === 'active' ? 'critical' : sos.status === 'acknowledged' ? 'high' : 'resolved'}
-            size="small"
-          />
-        }
+        rightAction={<StatusPill label={sos.status} variant={sos.status === 'active' ? 'critical' : sos.status === 'acknowledged' ? 'high' : 'resolved'} size="small" />}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -150,16 +153,22 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
                   onPress={() => Linking.openURL(`tel:${userObj.phone}`)}
                   style={styles.phoneRow}
                 >
-                  <Text style={styles.phoneText}>📞 {userObj.phone} (Tap to Call)</Text>
+                  <AppIcon icon={Call02Icon} size="xs" color={Colors.primaryLight} />
+                  <Text style={styles.phoneText}>{userObj.phone} (Tap to Call)</Text>
                 </TouchableOpacity>
               )}
             </View>
-            <Text style={styles.sosSymbol}>🆘</Text>
+            <View style={styles.sosSymbolBox}>
+              <AppIcon icon={SirenIcon} size="lg" color={Colors.critical} />
+            </View>
           </View>
 
-          <Text style={styles.locationText}>
-            📍 Location: {sos.location || 'Location not configured by user'}
-          </Text>
+          <View style={styles.locationRow}>
+            <AppIcon icon={Location01Icon} size="xs" color={Colors.textSecondary} />
+            <Text style={styles.locationText}>
+              Location: {sos.location || 'Location not configured by user'}
+            </Text>
+          </View>
 
           {cameraObj && (
             <TouchableOpacity
@@ -167,7 +176,11 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
               onPress={() => navigation.navigate('LiveView', { cameraId: cameraObj._id, cameraName: cameraObj.name })}
               style={styles.cameraLink}
             >
-              <Text style={styles.cameraLinkText}>📹 {cameraObj.name} — Open Live Stream ›</Text>
+              <View style={styles.cameraLinkContent}>
+                <AppIcon icon={CameraVideoIcon} size="xs" color={Colors.primaryLight} />
+                <Text style={styles.cameraLinkText}>{cameraObj.name} — Open Live Stream</Text>
+              </View>
+              <AppIcon icon={ChevronRightIcon} size="xs" color={Colors.primaryLight} />
             </TouchableOpacity>
           )}
         </Card>
@@ -331,31 +344,50 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 4,
   },
   phoneText: {
     fontSize: 13,
     fontWeight: '700',
     color: Colors.primaryLight,
+    marginLeft: 4,
   },
-  sosSymbol: {
-    fontSize: 32,
+  sosSymbolBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
   },
   locationText: {
     fontSize: 14,
     color: Colors.textSecondary,
-    marginTop: 10,
+    marginLeft: 6,
+    flex: 1,
   },
   cameraLink: {
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cameraLinkContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   cameraLinkText: {
     fontSize: 13,
     fontWeight: '800',
     color: Colors.primaryLight,
+    marginLeft: 6,
   },
   sectionTitle: {
     fontSize: 13,

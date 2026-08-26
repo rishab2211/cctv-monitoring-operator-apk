@@ -60,4 +60,9 @@ export const CameraApi = {
     const response = await apiClient.post(`/recordings/${recordingId}/download`);
     return response.data.data;
   },
+
+  triggerSnapshot: async (cameraId: string): Promise<{ snapshotUrl: string }> => {
+    const response = await apiClient.post(`/cameras/${cameraId}/snapshot`);
+    return response.data.data;
+  },
 };

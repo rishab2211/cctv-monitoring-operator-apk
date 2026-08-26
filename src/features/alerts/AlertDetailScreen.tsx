@@ -11,11 +11,18 @@ import {
   View,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
+import {
+  CameraVideoIcon,
+  CheckmarkSquare02Icon,
+  ChevronRightIcon,
+  SquareIcon,
+} from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { StatusPill } from '../../components/common/StatusPill';
 import { Button } from '../../components/common/Button';
+import { AppIcon } from '../../components/common/AppIcon';
 import { AlertApi } from '../../api/endpoints/alert.api';
 import { alertAcknowledgedSuccess, alertResolvedSuccess } from '../../store/slices/alertSlice';
 import { Alert as AlertType } from '../../types/alert.types';
@@ -167,7 +174,11 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
               onPress={() => navigation.navigate('LiveView', { cameraId: cameraObj._id, cameraName: cameraObj.name })}
               style={styles.cameraLink}
             >
-              <Text style={styles.cameraLinkText}>📹 {cameraObj.name} (View Live Feed) ›</Text>
+              <View style={styles.cameraLinkContent}>
+                <AppIcon icon={CameraVideoIcon} size="xs" color={Colors.primaryLight} />
+                <Text style={styles.cameraLinkText}>{cameraObj.name} (View Live Feed)</Text>
+              </View>
+              <AppIcon icon={ChevronRightIcon} size="xs" color={Colors.textMuted} />
             </TouchableOpacity>
           )}
         </Card>
@@ -287,7 +298,11 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
               onPress={() => setIsVerifiedCheck(!isVerifiedCheck)}
               style={styles.verifyCheckRow}
             >
-              <Text style={styles.checkBox}>{isVerifiedCheck ? '☑' : '☐'}</Text>
+              <AppIcon
+                icon={isVerifiedCheck ? CheckmarkSquare02Icon : SquareIcon}
+                size="sm"
+                color={isVerifiedCheck ? Colors.primaryLight : Colors.textMuted}
+              />
               <Text style={styles.checkLabel}>Mark as verified genuine event</Text>
             </TouchableOpacity>
 
@@ -347,11 +362,20 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: Colors.surfaceElevated,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cameraLinkContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   cameraLinkText: {
     fontSize: 13,
     fontWeight: '700',
     color: Colors.primaryLight,
+    marginLeft: 6,
   },
   sectionTitle: {
     fontSize: 13,

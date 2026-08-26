@@ -6,8 +6,10 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Call02Icon, Mic01Icon } from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
+import { AppIcon } from '../../components/common/AppIcon';
 import { TalkbackApi } from '../../api/endpoints/talkback.api';
 import { TalkbackSession } from '../../types/talkback.types';
 import { formatDateTime, formatDuration } from '../../utils/date';
@@ -53,7 +55,10 @@ export const CallHistoryScreen: React.FC<CallHistoryScreenProps> = ({ navigation
       <View style={styles.logCard}>
         <View style={styles.cardHeader}>
           <View style={styles.titleArea}>
-            <Text style={styles.cameraName}>🎙️ {cameraName}</Text>
+            <View style={styles.cameraRow}>
+              <AppIcon icon={Mic01Icon} size="xs" color={Colors.secondary} />
+              <Text style={styles.cameraName}>{cameraName}</Text>
+            </View>
             <Text style={styles.operatorText}>Initiated by: {operatorName}</Text>
           </View>
           <Text style={styles.durationText}>
@@ -77,7 +82,7 @@ export const CallHistoryScreen: React.FC<CallHistoryScreenProps> = ({ navigation
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>📞</Text>
+            <AppIcon icon={Call02Icon} size="xxl" color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>No Calls Recorded</Text>
             <Text style={styles.emptySub}>No talkback sessions have been initiated on your assigned cameras.</Text>
           </View>
@@ -113,10 +118,15 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
   },
+  cameraRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   cameraName: {
     fontSize: 15,
     fontWeight: '800',
     color: Colors.textPrimary,
+    marginLeft: 6,
   },
   operatorText: {
     fontSize: 12,
@@ -139,14 +149,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 60,
   },
-  emptyEmoji: {
-    fontSize: 40,
-    marginBottom: 10,
-  },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '800',
     color: Colors.textPrimary,
+    marginTop: 12,
   },
   emptySub: {
     fontSize: 13,

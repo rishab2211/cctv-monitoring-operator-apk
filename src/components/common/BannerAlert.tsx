@@ -1,6 +1,14 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import {
+  Alert02Icon,
+  BellIcon,
+  Cancel01Icon,
+  CheckmarkCircle02Icon,
+  SirenIcon,
+} from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
+import { AppIcon } from './AppIcon';
 
 interface BannerAlertProps {
   title: string;
@@ -28,21 +36,21 @@ export const BannerAlert: React.FC<BannerAlertProps> = ({
           bg: 'rgba(220, 38, 38, 0.2)',
           border: Colors.critical,
           text: Colors.sosText,
-          icon: '🆘',
+          icon: SirenIcon,
         };
       case 'warning':
         return {
           bg: 'rgba(245, 158, 11, 0.15)',
           border: Colors.warning,
           text: '#FEF3C7',
-          icon: '⚠️',
+          icon: Alert02Icon,
         };
       case 'success':
         return {
           bg: 'rgba(16, 185, 129, 0.15)',
           border: Colors.success,
           text: '#D1FAE5',
-          icon: '✅',
+          icon: CheckmarkCircle02Icon,
         };
       case 'info':
       default:
@@ -50,7 +58,7 @@ export const BannerAlert: React.FC<BannerAlertProps> = ({
           bg: 'rgba(59, 130, 246, 0.15)',
           border: Colors.info,
           text: '#DBEAFE',
-          icon: '🔔',
+          icon: BellIcon,
         };
     }
   };
@@ -64,7 +72,9 @@ export const BannerAlert: React.FC<BannerAlertProps> = ({
         onPress={onPress}
         style={styles.touchArea}
       >
-        <Text style={styles.icon}>{c.icon}</Text>
+        <View style={styles.iconContainer}>
+          <AppIcon icon={c.icon} size="md" color={c.border} />
+        </View>
         <View style={styles.textContainer}>
           <Text style={[styles.title, { color: c.border }]}>{title}</Text>
           <Text numberOfLines={2} style={[styles.message, { color: c.text }]}>
@@ -79,7 +89,7 @@ export const BannerAlert: React.FC<BannerAlertProps> = ({
       </TouchableOpacity>
       {onDismiss && (
         <TouchableOpacity activeOpacity={0.7} onPress={onDismiss} style={styles.dismissBtn}>
-          <Text style={styles.dismissText}>✕</Text>
+          <AppIcon icon={Cancel01Icon} size="sm" color={Colors.textMuted} />
         </TouchableOpacity>
       )}
     </View>
@@ -101,9 +111,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  icon: {
-    fontSize: 20,
+  iconContainer: {
     marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textContainer: {
     flex: 1,
@@ -133,10 +144,7 @@ const styles = StyleSheet.create({
   dismissBtn: {
     marginLeft: 8,
     padding: 4,
-  },
-  dismissText: {
-    color: Colors.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
