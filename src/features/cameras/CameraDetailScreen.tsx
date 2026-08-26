@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  AlertCircleIcon,
   CassetteTapeIcon,
   Location01Icon,
   Mic01Icon,
@@ -23,6 +24,8 @@ import { Button } from '../../components/common/Button';
 import { AppIcon } from '../../components/common/AppIcon';
 import { CameraApi } from '../../api/endpoints/camera.api';
 import { Camera, CameraHealth } from '../../types/camera.types';
+import { getApiErrorMessage } from '../../utils/error';
+import { formatRelativeTime, formatDateTime } from '../../utils/date';
 
 interface CameraDetailScreenProps {
   route: any;
@@ -56,7 +59,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
         setHealth(fetched.health);
       }
     } catch (e) {
-      console.warn('[CameraDetail] Error loading camera details:', e);
+      console.warn('[CameraDetail] Error loading camera details:', getApiErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -158,17 +161,34 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
         </Card>
 
         {/* Realtime Health & Telemetry Card */}
-        <Text style={styles.sectionTitle}>Hardware Health Metrics</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Hardware Health Metrics</Text>
+          <Text style={styles.telemetryLiveBadge}>15s Auto-refresh</Text>
+        </View>
         <Card variant="elevated">
           <View style={styles.metricsGrid}>
             <View style={styles.metricItem}>
               <Text style={styles.metricLabel}>CPU Load</Text>
-              <Text style={styles.metricValue}>{health.cpuUsage}%</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  health.cpuUsage > 85 ? { color: Colors.critical } : {},
+                ]}
+              >
+                {health.cpuUsage}%
+              </Text>
             </View>
 
             <View style={styles.metricItem}>
               <Text style={styles.metricLabel}>Memory</Text>
-              <Text style={styles.metricValue}>{health.memoryUsage}%</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  health.memoryUsage > 85 ? { color: Colors.warning } : {},
+                ]}
+              >
+                {health.memoryUsage}%
+              </Text>
             </View>
 
             <View style={styles.metricItem}>
@@ -185,8 +205,22 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
 
             <View style={styles.metricItem}>
               <Text style={styles.metricLabel}>Storage</Text>
-              <Text style={styles.metricValue}>{health.storageUsage}%</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  health.storageUsage > 90 ? { color: Colors.warning } : {},
+                ]}
+              >
+                {health.storageUsage}%
+              </Text>
             </View>
+          </View>
+
+          <View style={styles.pingRow}>
+            <Text style={styles.pingLabel}>Last Telemetry Ping:</Text>
+            <Text style={styles.pingValue}>
+              {health.lastPing ? `${formatRelativeTime(health.lastPing)} (${formatDateTime(health.lastPing)})` : 'No telemetry recorded'}
+            </Text>
           </View>
         </Card>
 
@@ -261,6 +295,22 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 4,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    marginBottom: 8,
+  },
+  telemetryLiveBadge: {
+    fontSize: 11,
+    color: Colors.online,
+    fontWeight: '700',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '800',
@@ -310,6 +360,25 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: Colors.textPrimary,
     marginTop: 4,
+  },
+  pingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: Colors.surfaceLight,
+  },
+  pingLabel: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontWeight: '600',
+  },
+  pingValue: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontWeight: '600',
   },
   configRow: {
     flexDirection: 'row',

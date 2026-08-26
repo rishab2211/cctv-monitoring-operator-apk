@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   CameraVideoIcon,
+  CassetteTapeIcon,
   Location01Icon,
   Mic01Icon,
   PlayIcon,
@@ -26,6 +27,7 @@ import { OperatorApi } from '../../api/endpoints/operator.api';
 import { socketService } from '../../services/socket.service';
 import { setCameras, setSelectedCamera, setStatusFilter } from '../../store/slices/cameraSlice';
 import { Camera, CameraStatus } from '../../types/camera.types';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface CameraListScreenProps {
   navigation: any;
@@ -49,7 +51,7 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
         socketService.joinCamera(cam._id);
       });
     } catch (e) {
-      console.warn('[CameraList] Failed to load cameras:', e);
+      console.warn('[CameraList] Failed to load cameras:', getApiErrorMessage(e));
     }
   };
 
@@ -115,7 +117,9 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
         <View style={styles.locationRow}>
           <AppIcon icon={Location01Icon} size="xs" color={Colors.textMuted} />
           <Text numberOfLines={1} style={styles.locationText}>
-            {item.location?.street || item.location?.city ? `${item.location.street || ''} ${item.location.city || ''}` : 'Location unconfigured'}
+            {item.location?.street || item.location?.city
+              ? `${item.location.street || ''} ${item.location.city || ''}`
+              : 'Location unconfigured'}
           </Text>
         </View>
       </View>
@@ -135,14 +139,46 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
           )}
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('LiveView', { cameraId: item._id, cameraName: item.name })}
-          style={styles.watchLiveBtn}
-        >
-          <AppIcon icon={PlayIcon} size="xs" color="#FFFFFF" />
-          <Text style={styles.watchLiveText}>Watch Live</Text>
-        </TouchableOpacity>
+        <View style={styles.cardActionsRow}>
+          {item.settings?.talkbackEnabled && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() =>
+                navigation.navigate('TalkbackActive', {
+                  cameraId: item._id,
+                  cameraName: item.name,
+                })
+              }
+              style={styles.cardActionBtn}
+            >
+              <AppIcon icon={Mic01Icon} size="xs" color={Colors.secondary} />
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() =>
+              navigation.navigate('RecordingPlayback', {
+                cameraId: item._id,
+                cameraName: item.name,
+              })
+            }
+            style={styles.cardActionBtn}
+          >
+            <AppIcon icon={CassetteTapeIcon} size="xs" color={Colors.primaryLight} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() =>
+              navigation.navigate('LiveView', { cameraId: item._id, cameraName: item.name })
+            }
+            style={styles.watchLiveBtn}
+          >
+            <AppIcon icon={PlayIcon} size="xs" color="#FFFFFF" />
+            <Text style={styles.watchLiveText}>Watch Live</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -320,12 +356,27 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.critical,
   },
+  cardActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardActionBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    marginRight: 6,
+  },
   watchLiveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.primary,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 8,
   },
   watchLiveText: {

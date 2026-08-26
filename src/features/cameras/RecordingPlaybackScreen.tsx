@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import {
+  Calendar03Icon,
   CassetteTapeIcon,
   Clock01Icon,
   Download01Icon,
@@ -20,6 +21,7 @@ import { Header } from '../../components/common/Header';
 import { AppIcon } from '../../components/common/AppIcon';
 import { CameraApi } from '../../api/endpoints/camera.api';
 import { RecordingChunk, RecordingTimelineItem } from '../../types/camera.types';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface RecordingPlaybackScreenProps {
   navigation: any;
@@ -38,6 +40,8 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
   const { cameraId, cameraName } = route.params;
 
   const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
   const [selectedDate, setSelectedDate] = useState(today);
   const [timelineItems, setTimelineItems] = useState<RecordingTimelineItem[]>([]);
   const [chunks, setChunks] = useState<RecordingChunk[]>([]);
@@ -54,7 +58,7 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
       const chunkList = await CameraApi.getRecordingPlayback(cameraId, startTime, endTime);
       setChunks(chunkList);
     } catch (e: any) {
-      console.warn('[Playback] Error loading recordings:', e);
+      console.warn('[Playback] Error loading recordings:', getApiErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -71,7 +75,7 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
         Linking.openURL(downloadUrl);
       }
     } catch (e: any) {
-      Alert.alert('Download Error', e.response?.data?.message || 'Could not generate download link.');
+      Alert.alert('Download Error', getApiErrorMessage(e, 'Could not generate download link.'));
     }
   };
 
@@ -110,15 +114,45 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
       />
 
       {/* Date Filter */}
-      <View style={styles.dateRow}>
-        <Text style={styles.dateLabel}>Select Date (YYYY-MM-DD):</Text>
-        <TextInput
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor={Colors.textMuted}
-          style={styles.dateInput}
-          value={selectedDate}
-          onChangeText={setSelectedDate}
-        />
+      <View style={styles.dateSection}>
+        <View style={styles.quickDateRow}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setSelectedDate(today)}
+            style={[
+              styles.quickDateChip,
+              selectedDate === today ? { backgroundColor: Colors.primary, borderColor: Colors.primary } : {},
+            ]}
+          >
+            <Text style={[styles.quickDateText, selectedDate === today ? { color: '#FFFFFF', fontWeight: '800' } : {}]}>
+              Today
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setSelectedDate(yesterday)}
+            style={[
+              styles.quickDateChip,
+              selectedDate === yesterday ? { backgroundColor: Colors.primary, borderColor: Colors.primary } : {},
+            ]}
+          >
+            <Text style={[styles.quickDateText, selectedDate === yesterday ? { color: '#FFFFFF', fontWeight: '800' } : {}]}>
+              Yesterday
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.dateInputRow}>
+          <AppIcon icon={Calendar03Icon} size="sm" color={Colors.textMuted} />
+          <TextInput
+            placeholder="YYYY-MM-DD"
+            placeholderTextColor={Colors.textMuted}
+            style={styles.dateInput}
+            value={selectedDate}
+            onChangeText={setSelectedDate}
+          />
+        </View>
       </View>
 
       {/* Timeline Segments Summary */}
@@ -156,31 +190,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  dateSection: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  dateLabel: {
-    fontSize: 13,
+  quickDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  quickDateChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginRight: 8,
+  },
+  quickDateText: {
+    fontSize: 12,
     fontWeight: '700',
     color: Colors.textSecondary,
-    marginRight: 10,
   },
-  dateInput: {
-    flex: 1,
+  dateInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.surfaceElevated,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
+  },
+  dateInput: {
+    flex: 1,
+    paddingHorizontal: 8,
     paddingVertical: 6,
     color: Colors.textPrimary,
     fontFamily: 'monospace',
+    fontSize: 13,
   },
   timelineSummary: {
     paddingHorizontal: 16,

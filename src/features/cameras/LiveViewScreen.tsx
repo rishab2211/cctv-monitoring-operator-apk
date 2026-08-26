@@ -14,12 +14,14 @@ import {
   Cancel01Icon,
   FileEditIcon,
   Mic01Icon,
+  RefreshIcon,
   VolumeHighIcon,
   VolumeMute01Icon,
 } from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
 import { CameraApi } from '../../api/endpoints/camera.api';
+import { getApiErrorMessage } from '../../utils/error';
 
 interface LiveViewScreenProps {
   navigation: any;
@@ -42,69 +44,79 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
 
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const sessionIdRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  const initializeWebRTC = async () => {
+    try {
+      setLoading(true);
+      setErrorMsg(null);
+
+      // Clean up previous connection if retrying
+      if (sessionIdRef.current) {
+        CameraApi.stopStream(cameraId, sessionIdRef.current).catch(() => null);
+        sessionIdRef.current = null;
+      }
+      if (peerConnection.current) {
+        peerConnection.current.close();
+        peerConnection.current = null;
+      }
+
+      // Step 1: Start Stream Session via backend API
+      const sessionData = await CameraApi.startStream(cameraId);
+      sessionIdRef.current = sessionData.sessionId;
+
+      // Step 2: Initialize WebRTC PeerConnection
+      const configuration = {
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+      };
+
+      const pc = new RTCPeerConnection(configuration);
+      peerConnection.current = pc;
+
+      (pc as any).ontrack = (event: any) => {
+        if (event.streams && event.streams[0]) {
+          if (isMountedRef.current) {
+            setRemoteStream(event.streams[0]);
+            setStreamUrl(event.streams[0].toURL());
+          }
+        }
+      };
+
+      // Add transceiver for receiving video
+      pc.addTransceiver('video', { direction: 'recvonly' });
+      pc.addTransceiver('audio', { direction: 'recvonly' });
+
+      // Step 3: Create SDP Offer
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
+      await pc.setLocalDescription(offer);
+
+      // Step 4: Relay Offer to backend MediaMTX WHEP
+      if (offer.sdp) {
+        const answerData = await CameraApi.relayWebRTCOffer(cameraId, offer.sdp);
+        await pc.setRemoteDescription({
+          type: 'answer',
+          sdp: answerData.sdp,
+        });
+      }
+    } catch (err: any) {
+      console.warn('[LiveView] WebRTC connection error:', err);
+      if (isMountedRef.current) {
+        setErrorMsg(getApiErrorMessage(err, 'Live camera stream unreachable.'));
+      }
+    } finally {
+      if (isMountedRef.current) setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
-
-    const initializeWebRTC = async () => {
-      try {
-        setLoading(true);
-        setErrorMsg(null);
-
-        // Step 1: Start Stream Session via backend API
-        const sessionData = await CameraApi.startStream(cameraId);
-        sessionIdRef.current = sessionData.sessionId;
-
-        // Step 2: Initialize WebRTC PeerConnection
-        const configuration = {
-          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-        };
-
-        const pc = new RTCPeerConnection(configuration);
-        peerConnection.current = pc;
-
-        (pc as any).ontrack = (event: any) => {
-          if (event.streams && event.streams[0]) {
-            if (isMounted) {
-              setRemoteStream(event.streams[0]);
-              setStreamUrl(event.streams[0].toURL());
-            }
-          }
-        };
-
-        // Add transceiver for receiving video
-        pc.addTransceiver('video', { direction: 'recvonly' });
-        pc.addTransceiver('audio', { direction: 'recvonly' });
-
-        // Step 3: Create SDP Offer
-        const offer = await pc.createOffer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: true,
-        });
-        await pc.setLocalDescription(offer);
-
-        // Step 4: Relay Offer to backend MediaMTX WHEP
-        if (offer.sdp) {
-          const answerData = await CameraApi.relayWebRTCOffer(cameraId, offer.sdp);
-          await pc.setRemoteDescription({
-            type: 'answer',
-            sdp: answerData.sdp,
-          });
-        }
-      } catch (err: any) {
-        console.warn('[LiveView] WebRTC connection error:', err);
-        if (isMounted) {
-          setErrorMsg(err.response?.data?.message || 'Live camera stream unreachable.');
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
+    isMountedRef.current = true;
     initializeWebRTC();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       // Step 5: Stop session on close
       if (sessionIdRef.current) {
         CameraApi.stopStream(cameraId, sessionIdRef.current).catch(() => null);
@@ -121,7 +133,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
       await CameraApi.triggerSnapshot(cameraId);
       Alert.alert('Snapshot Saved', 'Live frame captured to server storage.');
     } catch (e: any) {
-      Alert.alert('Snapshot Failed', e.response?.data?.message || 'Could not trigger frame capture.');
+      Alert.alert('Snapshot Failed', getApiErrorMessage(e, 'Could not trigger frame capture.'));
     }
   };
 
@@ -147,6 +159,14 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
               <View style={styles.errorBox}>
                 <AppIcon icon={Alert02Icon} size="xl" color={Colors.warning} />
                 <Text style={styles.errorText}>{errorMsg || 'Stream currently unavailable.'}</Text>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={initializeWebRTC}
+                  style={styles.retryBtn}
+                >
+                  <AppIcon icon={RefreshIcon} size="xs" color="#FFFFFF" />
+                  <Text style={styles.retryBtnText}>Retry Connection</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -263,6 +283,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     textAlign: 'center',
+    marginBottom: 12,
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  retryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    marginLeft: 6,
   },
   topOverlay: {
     position: 'absolute',
