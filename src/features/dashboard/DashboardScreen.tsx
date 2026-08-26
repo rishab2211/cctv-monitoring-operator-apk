@@ -30,6 +30,7 @@ import { BannerAlert } from '../../components/common/BannerAlert';
 import { AppIcon } from '../../components/common/AppIcon';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import { SOSApi } from '../../api/endpoints/sos.api';
+import { AlertApi } from '../../api/endpoints/alert.api';
 import { socketService } from '../../services/socket.service';
 import {
   clockInSuccess,
@@ -38,6 +39,7 @@ import {
   setShiftStatus,
 } from '../../store/slices/shiftSlice';
 import { setActiveSosAlerts } from '../../store/slices/sosSlice';
+import { setAlertStats } from '../../store/slices/alertSlice';
 import { formatDateTime, formatDuration } from '../../utils/date';
 
 interface DashboardScreenProps {
@@ -86,10 +88,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   // Load dashboard, shift status, and active SOS data
   const loadDashboardData = useCallback(async () => {
     try {
-      const [dashData, shiftData, sosData] = await Promise.all([
+      const [dashData, shiftData, sosData, alertStats] = await Promise.all([
         OperatorApi.getDashboard().catch(() => null),
         OperatorApi.getShiftStatus().catch(() => null),
         SOSApi.getActiveSosAlerts().catch(() => []),
+        AlertApi.getAlertStats().catch(() => null),
       ]);
 
       if (dashData?.stats) {
@@ -108,6 +111,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
       if (sosData) {
         dispatch(setActiveSosAlerts(sosData));
+      }
+
+      if (alertStats) {
+        dispatch(setAlertStats(alertStats));
       }
     } catch (e) {
       console.warn('Failed to refresh dashboard:', e);

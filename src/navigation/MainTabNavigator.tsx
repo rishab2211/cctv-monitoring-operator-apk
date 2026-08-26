@@ -37,8 +37,10 @@ const renderProfileIcon = ({ color }: { color: string }) => (
 );
 
 export const MainTabNavigator: React.FC = () => {
-  const { pendingAlerts } = useSelector((state: RootState) => state.alert);
+  const { pendingAlerts, stats } = useSelector((state: RootState) => state.alert);
   const { activeSosAlerts } = useSelector((state: RootState) => state.sos);
+
+  const alertBadgeCount = stats?.pending ?? pendingAlerts.length;
 
   return (
     <Tab.Navigator
@@ -73,7 +75,7 @@ export const MainTabNavigator: React.FC = () => {
         component={AlertListScreen}
         options={{
           tabBarLabel: 'Alerts',
-          tabBarBadge: pendingAlerts.length > 0 ? pendingAlerts.length : undefined,
+          tabBarBadge: alertBadgeCount > 0 ? alertBadgeCount : undefined,
           tabBarBadgeStyle: styles.badgeAlert,
           tabBarIcon: renderAlertsIcon,
         }}
