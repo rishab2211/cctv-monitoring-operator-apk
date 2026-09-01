@@ -46,27 +46,46 @@ export const alertSlice = createSlice({
     },
     alertAcknowledgedSuccess: (state, action: PayloadAction<Alert>) => {
       // Remove from pending and add to active
+      const wasPending = state.pendingAlerts.some((a) => a._id === action.payload._id);
       state.pendingAlerts = state.pendingAlerts.filter((a) => a._id !== action.payload._id);
       state.activeAlerts = [action.payload, ...state.activeAlerts.filter((a) => a._id !== action.payload._id)];
       if (state.stats) {
-        state.stats.pending = Math.max(0, state.stats.pending - 1);
+        if (wasPending) {
+          state.stats.pending = Math.max(0, state.stats.pending - 1);
+        }
         state.stats.acknowledged += 1;
       }
     },
     alertEscalatedSuccess: (state, action: PayloadAction<Alert>) => {
+      const wasPending = state.pendingAlerts.some((a) => a._id === action.payload._id);
+      const wasActive = state.activeAlerts.some((a) => a._id === action.payload._id);
+
       state.pendingAlerts = state.pendingAlerts.filter((a) => a._id !== action.payload._id);
       state.activeAlerts = [action.payload, ...state.activeAlerts.filter((a) => a._id !== action.payload._id)];
       if (state.stats) {
-        state.stats.pending = Math.max(0, state.stats.pending - 1);
+        if (wasPending) {
+          state.stats.pending = Math.max(0, state.stats.pending - 1);
+        } else if (wasActive) {
+          state.stats.acknowledged = Math.max(0, state.stats.acknowledged - 1);
+        }
         if (state.stats.escalated !== undefined) {
           state.stats.escalated += 1;
         }
       }
     },
     alertResolvedSuccess: (state, action: PayloadAction<string>) => {
+      const wasPending = state.pendingAlerts.some((a) => a._id === action.payload);
+      const wasActive = state.activeAlerts.some((a) => a._id === action.payload);
+
       state.pendingAlerts = state.pendingAlerts.filter((a) => a._id !== action.payload);
       state.activeAlerts = state.activeAlerts.filter((a) => a._id !== action.payload);
       if (state.stats) {
+        if (wasPending) {
+          state.stats.pending = Math.max(0, state.stats.pending - 1);
+        }
+        if (wasActive) {
+          state.stats.acknowledged = Math.max(0, state.stats.acknowledged - 1);
+        }
         state.stats.resolved += 1;
       }
     },

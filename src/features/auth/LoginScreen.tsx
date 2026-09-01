@@ -19,6 +19,7 @@ import { AppIcon } from '../../components/common/AppIcon';
 import { AuthApi } from '../../api/endpoints/auth.api';
 import { StorageService } from '../../services/storage.service';
 import { socketService } from '../../services/socket.service';
+import { fcmService } from '../../services/fcm.service';
 import { loginSuccess, setError, setLoading } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 import { getApiErrorMessage } from '../../utils/error';
@@ -62,9 +63,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       await StorageService.saveTokens(data.tokens.accessToken, data.tokens.refreshToken);
       await StorageService.saveCachedUser(data.user);
 
-      // Connect Socket.IO
+      // Connect Socket.IO & Push Notifications
       const franchiseId = data.user.operatorDetails?.assignedFranchise;
       await socketService.connect(data.user._id, franchiseId);
+      fcmService.init().catch((e) => console.log('[Login] FCM init error:', e));
 
       // Update Redux state
       dispatch(loginSuccess({ user: data.user }));

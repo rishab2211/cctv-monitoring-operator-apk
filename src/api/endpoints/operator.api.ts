@@ -8,6 +8,7 @@ import {
 import { Camera } from '../../types/camera.types';
 import { Alert } from '../../types/alert.types';
 import { OperatorReportsResponse, OperatorTimelineItem } from '../../types/reports.types';
+import { buildQueryString } from '../../utils/query';
 
 export const OperatorApi = {
   getDashboard: async (): Promise<OperatorDashboardResponse> => {
@@ -56,7 +57,7 @@ export const OperatorApi = {
   },
 
   getShiftsHistory: async (page = 1, limit = 20): Promise<{ shifts: ShiftHistoryItem[]; total: number }> => {
-    const response = await apiClient.get(`/operators/shifts?page=${page}&limit=${limit}`);
+    const response = await apiClient.get(`/operators/shifts${buildQueryString({ page, limit })}`);
     return {
       shifts: response.data.data.shifts || response.data.data || [],
       total: response.data.data.total || 0,

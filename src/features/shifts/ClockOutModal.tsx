@@ -51,7 +51,7 @@ export const ClockOutModal: React.FC<ClockOutModalProps> = ({ navigation, route 
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [currentShift]);
+  }, [currentShift?.startTime]);
 
   const handleClockOut = async () => {
     setLoading(true);

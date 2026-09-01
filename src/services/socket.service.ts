@@ -181,6 +181,13 @@ class SocketService {
     };
   }
 
+  /**
+   * Unregister a listener for an event
+   */
+  off(event: string, handler: EventHandler): void {
+    this.listeners.get(event)?.delete(handler);
+  }
+
   private notifyListeners(event: string, data: any) {
     const handlers = this.listeners.get(event);
     if (handlers) {

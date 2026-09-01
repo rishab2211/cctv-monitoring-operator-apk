@@ -7,6 +7,7 @@ import {
   StreamTokenResponse,
   WebRTCOfferResponse,
 } from '../../types/camera.types';
+import { buildQueryString } from '../../utils/query';
 
 export const CameraApi = {
   getCameraById: async (cameraId: string): Promise<Camera> => {
@@ -41,7 +42,7 @@ export const CameraApi = {
   },
 
   getRecordingTimeline: async (cameraId: string, date: string): Promise<RecordingTimelineItem[]> => {
-    const response = await apiClient.get(`/recordings/${cameraId}/timeline?date=${date}`);
+    const response = await apiClient.get(`/recordings/${cameraId}/timeline${buildQueryString({ date })}`);
     return response.data.data.timeline || [];
   },
 
@@ -51,7 +52,7 @@ export const CameraApi = {
     endTime: string
   ): Promise<RecordingChunk[]> => {
     const response = await apiClient.get(
-      `/recordings/${cameraId}/playback?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`
+      `/recordings/${cameraId}/playback${buildQueryString({ startTime, endTime })}`
     );
     return response.data.data.chunks || [];
   },
