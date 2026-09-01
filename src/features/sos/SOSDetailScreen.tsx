@@ -125,7 +125,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
     return (
       <View style={styles.loadingContainer}>
         <Header title="SOS Panic Details" onBack={() => navigation.goBack()} />
-        <ActivityIndicator size="large" color={Colors.critical} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={Colors.critical} style={styles.loaderMargin} />
       </View>
     );
   }
@@ -329,6 +329,9 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loaderMargin: {
+    marginTop: 40,
   },
   scrollContent: {
     padding: 16,

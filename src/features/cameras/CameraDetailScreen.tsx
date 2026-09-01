@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import {
-  CassetteTapeIcon,
   Location01Icon,
   Mic01Icon,
   PlayIcon,
+  Time04Icon,
 } from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
@@ -23,7 +23,7 @@ import { AppIcon } from '../../components/common/AppIcon';
 import { CameraApi } from '../../api/endpoints/camera.api';
 import { Camera, CameraHealth } from '../../types/camera.types';
 import { getApiErrorMessage } from '../../utils/error';
-import { formatRelativeTime, formatDateTime } from '../../utils/date';
+import { formatDateTime, formatRelativeTime } from '../../utils/date';
 
 interface CameraDetailScreenProps {
   route: any;
@@ -72,14 +72,14 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
     return (
       <View style={styles.loadingContainer}>
         <Header title="Camera Details" onBack={() => navigation.goBack()} />
-        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={Colors.primary} style={styles.loaderMargin} />
       </View>
     );
   }
 
   if (!camera) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loadingContainer}>
         <Header title="Camera Details" onBack={() => navigation.goBack()} />
         <View style={styles.centerContainer}>
           <Text style={styles.errorText}>Camera not found or unassigned.</Text>
@@ -92,9 +92,9 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
     <View style={styles.container}>
       <Header
         title={camera.name}
-        subtitle={camera.serialNumber}
+        subtitle={`S/N: ${camera.serialNumber || 'N/A'}`}
         onBack={() => navigation.goBack()}
-        rightAction={<StatusPill label={camera.status} variant={camera.status} size="small" />}
+        rightAction={<StatusPill label={camera.status} variant={camera.status as any} size="small" />}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -128,7 +128,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
             <Button
               title="Playback"
               variant="outline"
-              icon={<AppIcon icon={CassetteTapeIcon} size="sm" color={Colors.primaryLight} />}
+              icon={<AppIcon icon={Time04Icon} size="sm" color={Colors.primaryLight} />}
               onPress={() =>
                 navigation.navigate('RecordingPlayback', {
                   cameraId: camera._id,
@@ -150,7 +150,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
               {camera.location?.state || ''} {camera.location?.pincode || ''}
             </Text>
           </View>
-          {camera.location?.latitude && (
+          {camera.location?.latitude !== undefined && (
             <Text style={styles.coordsText}>
               Coordinates: {camera.location.latitude.toFixed(4)}, {camera.location.longitude?.toFixed(4)}
             </Text>
@@ -169,7 +169,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
               <Text
                 style={[
                   styles.metricValue,
-                  health.cpuUsage > 85 ? { color: Colors.critical } : {},
+                  health.cpuUsage > 85 ? styles.metricValueCritical : undefined,
                 ]}
               >
                 {health.cpuUsage}%
@@ -181,7 +181,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
               <Text
                 style={[
                   styles.metricValue,
-                  health.memoryUsage > 85 ? { color: Colors.warning } : {},
+                  health.memoryUsage > 85 ? styles.metricValueWarning : undefined,
                 ]}
               >
                 {health.memoryUsage}%
@@ -193,7 +193,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
               <Text
                 style={[
                   styles.metricValue,
-                  health.temperature > 70 ? { color: Colors.critical } : {},
+                  health.temperature > 70 ? styles.metricValueCritical : undefined,
                 ]}
               >
                 {health.temperature}°C
@@ -205,7 +205,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
               <Text
                 style={[
                   styles.metricValue,
-                  health.storageUsage > 90 ? { color: Colors.warning } : {},
+                  health.storageUsage > 90 ? styles.metricValueWarning : undefined,
                 ]}
               >
                 {health.storageUsage}%
@@ -216,7 +216,9 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
           <View style={styles.pingRow}>
             <Text style={styles.pingLabel}>Last Telemetry Ping:</Text>
             <Text style={styles.pingValue}>
-              {health.lastPing ? `${formatRelativeTime(health.lastPing)} (${formatDateTime(health.lastPing)})` : 'No telemetry recorded'}
+              {health.lastPing
+                ? `${formatRelativeTime(health.lastPing)} (${formatDateTime(health.lastPing)})`
+                : 'No telemetry recorded'}
             </Text>
           </View>
         </Card>
@@ -226,26 +228,41 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
         <Card variant="elevated">
           <View style={styles.configRow}>
             <Text style={styles.configLabel}>24/7 Cloud Recording</Text>
-            <Text style={[styles.configValue, camera.settings.recordingEnabled ? { color: Colors.online } : {}]}>
+            <Text
+              style={[
+                styles.configValue,
+                camera.settings.recordingEnabled && styles.enabledConfigValue,
+              ]}
+            >
               {camera.settings.recordingEnabled ? 'ENABLED' : 'DISABLED'}
             </Text>
           </View>
 
           <View style={styles.configRow}>
             <Text style={styles.configLabel}>Motion Detection AI</Text>
-            <Text style={[styles.configValue, camera.settings.motionDetectionEnabled ? { color: Colors.online } : {}]}>
+            <Text
+              style={[
+                styles.configValue,
+                camera.settings.motionDetectionEnabled && styles.enabledConfigValue,
+              ]}
+            >
               {camera.settings.motionDetectionEnabled ? 'ENABLED' : 'DISABLED'}
             </Text>
           </View>
 
           <View style={styles.configRow}>
             <Text style={styles.configLabel}>AI Object/Vehicle Detection</Text>
-            <Text style={[styles.configValue, camera.settings.aiFeaturesEnabled ? { color: Colors.online } : {}]}>
+            <Text
+              style={[
+                styles.configValue,
+                camera.settings.aiFeaturesEnabled && styles.enabledConfigValue,
+              ]}
+            >
               {camera.settings.aiFeaturesEnabled ? 'ENABLED' : 'DISABLED'}
             </Text>
           </View>
 
-          <View style={[styles.configRow, { borderBottomWidth: 0 }]}>
+          <View style={[styles.configRow, styles.lastConfigRow]}>
             <Text style={styles.configLabel}>Video Retention</Text>
             <Text style={styles.configValue}>{camera.settings.recordingRetentionDays} Days</Text>
           </View>
@@ -263,6 +280,9 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loaderMargin: {
+    marginTop: 40,
   },
   centerContainer: {
     flex: 1,
@@ -358,6 +378,12 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginTop: 4,
   },
+  metricValueCritical: {
+    color: Colors.critical,
+  },
+  metricValueWarning: {
+    color: Colors.warning,
+  },
   pingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -385,6 +411,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.surfaceLight,
   },
+  lastConfigRow: {
+    borderBottomWidth: 0,
+  },
   configLabel: {
     fontSize: 13,
     color: Colors.textPrimary,
@@ -393,5 +422,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: Colors.textSecondary,
+  },
+  enabledConfigValue: {
+    color: Colors.online,
   },
 });

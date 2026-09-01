@@ -92,7 +92,7 @@ export const NotificationCenterScreen: React.FC<NotificationCenterScreenProps> =
       <View style={styles.cardHeader}>
         <View style={styles.titleRow}>
           {!item.isRead && <View style={styles.unreadDot} />}
-          <Text style={[styles.title, !item.isRead ? { fontWeight: '900' } : {}]}>
+          <Text style={[styles.title, !item.isRead && styles.unreadTitle]}>
             {item.title}
           </Text>
         </View>
@@ -199,6 +199,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: Colors.textPrimary,
+  },
+  unreadTitle: {
+    fontWeight: '900',
   },
   time: {
     fontSize: 11,

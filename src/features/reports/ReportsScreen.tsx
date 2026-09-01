@@ -69,7 +69,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
     return (
       <View style={styles.loadingContainer}>
         <Header title="Performance Reports" onBack={() => navigation.goBack()} />
-        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={Colors.primary} style={styles.loaderMargin} />
       </View>
     );
   }
@@ -207,6 +207,9 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loaderMargin: {
+    marginTop: 40,
   },
   scrollContent: {
     padding: 16,

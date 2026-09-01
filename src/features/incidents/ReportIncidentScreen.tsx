@@ -185,14 +185,12 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
             maxLength={100}
           />
 
-          <View style={[styles.labelRow, { marginTop: 16 }]}>
+          <View style={[styles.labelRow, styles.fieldLabelMargin]}>
             <Text style={styles.label}>Description *</Text>
             <Text
               style={[
                 styles.charCount,
-                description.trim().length > 0 && description.trim().length < 10
-                  ? { color: Colors.critical }
-                  : {},
+                description.trim().length > 0 && description.trim().length < 10 && styles.charCountWarning,
               ]}
             >
               {description.trim().length} chars (min 10)
@@ -209,7 +207,7 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
           />
 
           {/* Incident Type Picker */}
-          <Text style={[styles.label, { marginTop: 16, marginBottom: 8 }]}>Incident Category</Text>
+          <Text style={[styles.label, styles.categoryLabelMargin]}>Incident Category</Text>
           <View style={styles.chipRow}>
             {incidentTypes.map((t) => {
               const isSelected = type === t.key;
@@ -218,14 +216,14 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
                   key={t.key}
                   activeOpacity={0.8}
                   onPress={() => setType(t.key)}
-                  style={[styles.chip, isSelected ? styles.activeChip : {}]}
+                  style={[styles.chip, isSelected && styles.activeChip]}
                 >
                   <AppIcon
                     icon={t.icon}
                     size="xs"
                     color={isSelected ? '#FFFFFF' : Colors.textSecondary}
                   />
-                  <Text style={[styles.chipText, isSelected ? styles.activeChipText : {}]}>
+                  <Text style={[styles.chipText, isSelected && styles.activeChipText]}>
                     {t.label}
                   </Text>
                 </TouchableOpacity>
@@ -234,7 +232,7 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
           </View>
 
           {/* Severity Picker */}
-          <Text style={[styles.label, { marginTop: 16 }]}>Severity Level</Text>
+          <Text style={[styles.label, styles.fieldLabelMargin]}>Severity Level</Text>
           <View style={styles.chipRow}>
             {severityLevels.map((s) => (
               <TouchableOpacity
@@ -243,10 +241,10 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
                 onPress={() => setSeverity(s.key)}
                 style={[
                   styles.chip,
-                  severity === s.key ? { backgroundColor: Colors.primary, borderColor: Colors.primary } : {},
+                  severity === s.key && styles.activeChip,
                 ]}
               >
-                <Text style={[styles.chipText, severity === s.key ? styles.activeChipText : {}]}>
+                <Text style={[styles.chipText, severity === s.key && styles.activeChipText]}>
                   {s.label}
                 </Text>
               </TouchableOpacity>
@@ -254,14 +252,14 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
           </View>
 
           {/* Linked Camera Picker */}
-          <Text style={[styles.label, { marginTop: 16 }]}>Linked Camera (Optional)</Text>
+          <Text style={[styles.label, styles.fieldLabelMargin]}>Linked Camera (Optional)</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.cameraRow}>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => setSelectedCameraId(null)}
-              style={[styles.chip, selectedCameraId === null ? styles.activeChip : {}]}
+              style={[styles.chip, selectedCameraId === null && styles.activeChip]}
             >
-              <Text style={[styles.chipText, selectedCameraId === null ? styles.activeChipText : {}]}>
+              <Text style={[styles.chipText, selectedCameraId === null && styles.activeChipText]}>
                 No Specific Camera
               </Text>
             </TouchableOpacity>
@@ -273,14 +271,14 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
                   key={c._id}
                   activeOpacity={0.8}
                   onPress={() => setSelectedCameraId(c._id)}
-                  style={[styles.chip, isSelected ? styles.activeChip : {}]}
+                  style={[styles.chip, isSelected && styles.activeChip]}
                 >
                   <AppIcon
                     icon={CameraVideoIcon}
                     size="xs"
                     color={isSelected ? '#FFFFFF' : Colors.textSecondary}
                   />
-                  <Text style={[styles.chipText, isSelected ? styles.activeChipText : {}]}>
+                  <Text style={[styles.chipText, isSelected && styles.activeChipText]}>
                     {c.name}
                   </Text>
                 </TouchableOpacity>
@@ -289,7 +287,7 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
           </ScrollView>
 
           {/* Attachments */}
-          <View style={[styles.labelRow, { marginTop: 16 }]}>
+          <View style={[styles.labelRow, styles.fieldLabelMargin]}>
             <Text style={styles.label}>Attachments (Max 5)</Text>
             <Text style={styles.charCount}>{attachments.length}/5</Text>
           </View>
@@ -299,7 +297,7 @@ export const ReportIncidentScreen: React.FC<ReportIncidentScreenProps> = ({
             icon={<AppIcon icon={File01Icon} size="xs" color={Colors.primaryLight} />}
             onPress={handlePickAttachments}
             disabled={attachments.length >= 5}
-            style={{ marginBottom: 12 }}
+            style={styles.attachmentBtnMargin}
           />
           {attachments.map((file, idx) => (
             <View key={idx} style={styles.attachmentRow}>
@@ -352,10 +350,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textSecondary,
   },
+  fieldLabelMargin: {
+    marginTop: 16,
+  },
+  categoryLabelMargin: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
   charCount: {
     fontSize: 11,
     color: Colors.textMuted,
     fontWeight: '600',
+  },
+  charCountWarning: {
+    color: Colors.critical,
+  },
+  attachmentBtnMargin: {
+    marginBottom: 12,
   },
   input: {
     backgroundColor: Colors.surfaceElevated,

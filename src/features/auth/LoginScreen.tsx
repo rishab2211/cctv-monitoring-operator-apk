@@ -115,7 +115,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             onChangeText={setIdentifier}
           />
 
-          <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
+          <Text style={[styles.label, styles.passwordLabel]}>Password</Text>
           <View style={styles.passwordContainer}>
             <TextInput
               secureTextEntry={!showPassword}
@@ -244,6 +244,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textSecondary,
     marginBottom: 8,
+  },
+  passwordLabel: {
+    marginTop: 16,
   },
   input: {
     backgroundColor: Colors.surfaceElevated,

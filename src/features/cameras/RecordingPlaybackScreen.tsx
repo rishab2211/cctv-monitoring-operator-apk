@@ -121,10 +121,10 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
             onPress={() => setSelectedDate(today)}
             style={[
               styles.quickDateChip,
-              selectedDate === today ? { backgroundColor: Colors.primary, borderColor: Colors.primary } : {},
+              selectedDate === today && styles.activeQuickDateChip,
             ]}
           >
-            <Text style={[styles.quickDateText, selectedDate === today ? { color: '#FFFFFF', fontWeight: '800' } : {}]}>
+            <Text style={[styles.quickDateText, selectedDate === today && styles.activeQuickDateText]}>
               Today
             </Text>
           </TouchableOpacity>
@@ -134,10 +134,10 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
             onPress={() => setSelectedDate(yesterday)}
             style={[
               styles.quickDateChip,
-              selectedDate === yesterday ? { backgroundColor: Colors.primary, borderColor: Colors.primary } : {},
+              selectedDate === yesterday && styles.activeQuickDateChip,
             ]}
           >
-            <Text style={[styles.quickDateText, selectedDate === yesterday ? { color: '#FFFFFF', fontWeight: '800' } : {}]}>
+            <Text style={[styles.quickDateText, selectedDate === yesterday && styles.activeQuickDateText]}>
               Yesterday
             </Text>
           </TouchableOpacity>
@@ -163,7 +163,7 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={Colors.primary} style={styles.loaderMargin} />
       ) : (
         <FlatList
           data={chunks}
@@ -211,10 +211,21 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginRight: 8,
   },
+  activeQuickDateChip: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
   quickDateText: {
     fontSize: 12,
     fontWeight: '700',
     color: Colors.textSecondary,
+  },
+  activeQuickDateText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  loaderMargin: {
+    marginTop: 40,
   },
   dateInputRow: {
     flexDirection: 'row',

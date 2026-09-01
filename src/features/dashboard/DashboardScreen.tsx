@@ -337,11 +337,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             onPress={() => navigation.navigate('SOSTab')}
             style={[
               styles.statBox,
-              {
-                borderColor: dashboardStats.activeSos > 0 ? Colors.critical : Colors.border,
-                backgroundColor:
-                  dashboardStats.activeSos > 0 ? 'rgba(220, 38, 38, 0.12)' : Colors.surface,
-              },
+              dashboardStats.activeSos > 0 ? styles.statBoxCritical : styles.statBoxNormal,
             ]}
           >
             <View style={styles.statIconWrapper}>
@@ -354,19 +350,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             <Text
               style={[
                 styles.statNumber,
-                dashboardStats.activeSos > 0 ? { color: Colors.critical } : {},
+                dashboardStats.activeSos > 0 && styles.statNumberCritical,
               ]}
             >
               {dashboardStats.activeSos}
             </Text>
-            <Text
-              style={[
-                styles.statLabel,
-                dashboardStats.activeSos > 0 ? { color: Colors.critical } : {},
-              ]}
-            >
-              Active SOS
-            </Text>
+            <Text style={styles.statLabel}>Active SOS</Text>
             <Text style={styles.statScope}>Franchise Wide</Text>
           </TouchableOpacity>
         </View>
@@ -589,6 +578,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     alignItems: 'center',
   },
+  statBoxCritical: {
+    borderColor: Colors.critical,
+    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+  },
+  statBoxNormal: {
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
   statIconWrapper: {
     marginBottom: 6,
     alignItems: 'center',
@@ -598,6 +595,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
     color: Colors.textPrimary,
+  },
+  statNumberCritical: {
+    color: Colors.critical,
   },
   statLabel: {
     fontSize: 11,

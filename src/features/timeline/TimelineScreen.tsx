@@ -90,7 +90,7 @@ export const TimelineScreen: React.FC<TimelineScreenProps> = ({ navigation }) =>
       <Header title="Activity Timeline" subtitle="Chronological operator audit log" onBack={() => navigation.goBack()} />
 
       {loading ? (
-        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={Colors.primary} style={styles.loaderMargin} />
       ) : (
         <FlatList
           data={timeline}
@@ -115,6 +115,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loaderMargin: {
+    marginTop: 40,
   },
   listContent: {
     padding: 20,

@@ -67,12 +67,27 @@ export const StatusPill: React.FC<StatusPillProps> = ({
     <View
       style={[
         styles.pill,
-        { backgroundColor: colors.bg, paddingVertical: isSmall ? 2 : 4, paddingHorizontal: isSmall ? 6 : 10 },
+        isSmall ? styles.pillSmall : styles.pillMedium,
+        { backgroundColor: colors.bg },
         style,
       ]}
     >
-      <View style={[styles.dot, { backgroundColor: colors.dot, width: isSmall ? 6 : 8, height: isSmall ? 6 : 8 }]} />
-      <Text style={[styles.text, { color: colors.text, fontSize: isSmall ? 11 : 12 }]}>{label}</Text>
+      <View
+        style={[
+          styles.dot,
+          isSmall ? styles.dotSmall : styles.dotMedium,
+          { backgroundColor: colors.dot },
+        ]}
+      />
+      <Text
+        style={[
+          styles.text,
+          isSmall ? styles.textSmall : styles.textMedium,
+          { color: colors.text },
+        ]}
+      >
+        {label}
+      </Text>
     </View>
   );
 };
@@ -84,13 +99,35 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignSelf: 'flex-start',
   },
+  pillSmall: {
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+  },
+  pillMedium: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
   dot: {
     borderRadius: 4,
     marginRight: 6,
+  },
+  dotSmall: {
+    width: 6,
+    height: 6,
+  },
+  dotMedium: {
+    width: 8,
+    height: 8,
   },
   text: {
     fontWeight: '700',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+  textSmall: {
+    fontSize: 11,
+  },
+  textMedium: {
+    fontSize: 12,
   },
 });

@@ -140,7 +140,7 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
       />
 
       {loading ? (
-        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={Colors.primary} style={styles.loaderMargin} />
       ) : (
         <FlatList
           data={sessions}
@@ -168,6 +168,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loaderMargin: {
+    marginTop: 40,
   },
   listContent: {
     padding: 16,

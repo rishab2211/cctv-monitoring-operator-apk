@@ -78,7 +78,7 @@ export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({
             onChangeText={setCurrentPassword}
           />
 
-          <Text style={[styles.label, { marginTop: 14 }]}>New Password</Text>
+          <Text style={[styles.label, styles.passwordLabel]}>New Password</Text>
           <TextInput
             secureTextEntry
             placeholder="••••••••••••"
@@ -88,7 +88,7 @@ export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({
             onChangeText={setNewPassword}
           />
 
-          <Text style={[styles.label, { marginTop: 14 }]}>Confirm New Password</Text>
+          <Text style={[styles.label, styles.passwordLabel]}>Confirm New Password</Text>
           <TextInput
             secureTextEntry
             placeholder="••••••••••••"
@@ -131,6 +131,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textSecondary,
     marginBottom: 6,
+  },
+  passwordLabel: {
+    marginTop: 14,
   },
   input: {
     backgroundColor: Colors.surfaceElevated,

@@ -115,7 +115,7 @@ export const ClockOutModal: React.FC<ClockOutModalProps> = ({ navigation, route 
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Elapsed Time:</Text>
-            <Text style={[styles.summaryValue, { color: Colors.online, fontWeight: '800' }]}>
+            <Text style={[styles.summaryValue, styles.elapsedValue]}>
               {liveDuration}
             </Text>
           </View>
@@ -228,6 +228,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textPrimary,
     fontWeight: '600',
+  },
+  elapsedValue: {
+    color: Colors.online,
+    fontWeight: '800',
   },
   metricsRow: {
     flexDirection: 'row',

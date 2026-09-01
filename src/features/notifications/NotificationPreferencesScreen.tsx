@@ -64,7 +64,7 @@ export const NotificationPreferencesScreen: React.FC<NotificationPreferencesScre
     return (
       <View style={styles.loadingContainer}>
         <Header title="Notification Settings" onBack={() => navigation.goBack()} />
-        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={Colors.primary} style={styles.loaderMargin} />
       </View>
     );
   }
@@ -103,7 +103,7 @@ export const NotificationPreferencesScreen: React.FC<NotificationPreferencesScre
             />
           </View>
 
-          <View style={[styles.prefRow, { borderBottomWidth: 0 }]}>
+          <View style={[styles.prefRow, styles.lastPrefRow]}>
             <View style={styles.prefLabelBox}>
               <Text style={styles.prefTitle}>Email Summary</Text>
               <Text style={styles.prefDesc}>Send email digest for high priority alerts</Text>
@@ -146,7 +146,7 @@ export const NotificationPreferencesScreen: React.FC<NotificationPreferencesScre
             />
           </View>
 
-          <View style={[styles.prefRow, { borderBottomWidth: 0 }]}>
+          <View style={[styles.prefRow, styles.lastPrefRow]}>
             <View style={styles.prefLabelBox}>
               <Text style={styles.prefTitle}>Email Notifications</Text>
               <Text style={styles.prefDesc}>Account and shift handover summaries</Text>
@@ -160,11 +160,12 @@ export const NotificationPreferencesScreen: React.FC<NotificationPreferencesScre
           </View>
         </Card>
 
+        {/* Action Button */}
         <Button
-          title="Save Notification Settings"
+          title="Save Preferences"
+          variant="primary"
           loading={saving}
           onPress={handleSave}
-          size="large"
           style={styles.saveBtn}
         />
       </ScrollView>
@@ -180,6 +181,9 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loaderMargin: {
+    marginTop: 40,
   },
   scrollContent: {
     padding: 16,
@@ -201,6 +205,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.surfaceLight,
+  },
+  lastPrefRow: {
+    borderBottomWidth: 0,
   },
   prefLabelBox: {
     flex: 1,

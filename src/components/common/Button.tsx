@@ -32,23 +32,6 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
   icon,
 }) => {
-  const getBackgroundColor = () => {
-    if (disabled) return Colors.surfaceElevated;
-    switch (variant) {
-      case 'primary':
-        return Colors.primary;
-      case 'secondary':
-        return Colors.surfaceElevated;
-      case 'destructive':
-        return Colors.critical;
-      case 'outline':
-      case 'ghost':
-        return 'transparent';
-      default:
-        return Colors.primary;
-    }
-  };
-
   const getTextColor = () => {
     if (disabled) return Colors.textDisabled;
     switch (variant) {
@@ -66,21 +49,40 @@ export const Button: React.FC<ButtonProps> = ({
     }
   };
 
-  const getBorderColor = () => {
-    if (disabled) return Colors.border;
-    if (variant === 'outline') return Colors.primary;
-    if (variant === 'secondary') return Colors.border;
-    return 'transparent';
+  const getVariantStyle = () => {
+    switch (variant) {
+      case 'outline':
+        return styles.outlineBtn;
+      case 'secondary':
+        return styles.secondaryBtn;
+      case 'destructive':
+        return styles.destructiveBtn;
+      case 'ghost':
+        return styles.ghostBtn;
+      default:
+        return styles.primaryBtn;
+    }
   };
 
-  const getPadding = () => {
+  const getSizeStyle = () => {
     switch (size) {
       case 'small':
-        return { paddingVertical: 8, paddingHorizontal: 12 };
+        return styles.sizeSmall;
       case 'large':
-        return { paddingVertical: 16, paddingHorizontal: 24 };
+        return styles.sizeLarge;
       default:
-        return { paddingVertical: 12, paddingHorizontal: 18 };
+        return styles.sizeMedium;
+    }
+  };
+
+  const getTextSizeStyle = () => {
+    switch (size) {
+      case 'small':
+        return styles.textSmall;
+      case 'large':
+        return styles.textLarge;
+      default:
+        return styles.textMedium;
     }
   };
 
@@ -91,12 +93,9 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={onPress}
       style={[
         styles.button,
-        getPadding(),
-        {
-          backgroundColor: getBackgroundColor(),
-          borderColor: getBorderColor(),
-          borderWidth: variant === 'outline' || variant === 'secondary' ? 1 : 0,
-        },
+        getSizeStyle(),
+        getVariantStyle(),
+        disabled && styles.disabledBtn,
         style,
       ]}
     >
@@ -108,8 +107,9 @@ export const Button: React.FC<ButtonProps> = ({
           <Text
             style={[
               styles.text,
-              { color: getTextColor(), fontSize: size === 'small' ? 13 : size === 'large' ? 16 : 14 },
-              icon ? { marginLeft: 8 } : {},
+              getTextSizeStyle(),
+              { color: getTextColor() },
+              icon ? styles.iconTextMargin : undefined,
               textStyle,
             ]}
           >
@@ -128,8 +128,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  primaryBtn: {
+    backgroundColor: Colors.primary,
+  },
+  secondaryBtn: {
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  destructiveBtn: {
+    backgroundColor: Colors.critical,
+  },
+  outlineBtn: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  ghostBtn: {
+    backgroundColor: 'transparent',
+  },
+  disabledBtn: {
+    backgroundColor: Colors.surfaceElevated,
+    borderColor: Colors.border,
+  },
+  sizeSmall: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  sizeMedium: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+  },
+  sizeLarge: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
   text: {
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  textSmall: {
+    fontSize: 13,
+  },
+  textMedium: {
+    fontSize: 14,
+  },
+  textLarge: {
+    fontSize: 16,
+  },
+  iconTextMargin: {
+    marginLeft: 8,
   },
 });

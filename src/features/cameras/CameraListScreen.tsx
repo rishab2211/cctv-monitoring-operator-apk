@@ -80,12 +80,9 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
         key={filter}
         activeOpacity={0.7}
         onPress={() => dispatch(setStatusFilter(filter))}
-        style={[
-          styles.filterChip,
-          isActive ? { backgroundColor: Colors.primary, borderColor: Colors.primary } : {},
-        ]}
+        style={[styles.filterChip, isActive && styles.activeFilterChip]}
       >
-        <Text style={[styles.filterText, isActive ? { color: '#FFFFFF', fontWeight: '800' } : {}]}>
+        <Text style={[styles.filterText, isActive && styles.activeFilterText]}>
           {label}
         </Text>
       </TouchableOpacity>
@@ -265,10 +262,18 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginRight: 8,
   },
+  activeFilterChip: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
   filterText: {
     fontSize: 12,
     fontWeight: '600',
     color: Colors.textSecondary,
+  },
+  activeFilterText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   listContent: {
     paddingHorizontal: 16,

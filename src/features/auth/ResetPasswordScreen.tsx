@@ -3,6 +3,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -81,8 +82,8 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
     >
       <Header title="Set New Password" onBack={() => navigation.goBack()} />
 
-      <View style={styles.content}>
-        <Text style={styles.description}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.subtitle}>
           Create a strong password for your operator account. Must include at least 8 characters.
         </Text>
 
@@ -97,7 +98,7 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
             onChangeText={setNewPassword}
           />
 
-          <Text style={[styles.label, { marginTop: 16 }]}>Confirm New Password</Text>
+          <Text style={[styles.label, styles.passwordLabel]}>Confirm New Password</Text>
           <TextInput
             secureTextEntry
             placeholder="••••••••••••"
@@ -115,7 +116,7 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
             style={styles.submitBtn}
           />
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -125,11 +126,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
     padding: 24,
   },
-  description: {
+  subtitle: {
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 20,
@@ -147,6 +147,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textSecondary,
     marginBottom: 8,
+  },
+  passwordLabel: {
+    marginTop: 16,
   },
   input: {
     backgroundColor: Colors.surfaceElevated,
