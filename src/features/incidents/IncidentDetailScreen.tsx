@@ -15,8 +15,9 @@ import {
   CameraVideoIcon,
   Chart01Icon,
   ChevronRightIcon,
-  TimelineIcon,
   CloudUploadIcon,
+  File01Icon,
+  TimelineIcon,
 } from '@hugeicons/core-free-icons';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import { RootState } from '../../store';
@@ -62,7 +63,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
   // Media upload
   const [mediaLoading, setMediaLoading] = useState(false);
 
-  const loadIncident = async () => {
+  const loadIncident = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await IncidentApi.getIncidentById(incidentId);
@@ -72,11 +73,11 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [incidentId]);
 
   useEffect(() => {
     loadIncident();
-  }, [incidentId]);
+  }, [incidentId, loadIncident]);
 
   const assignedId =
     typeof incident?.assignedTo === 'object' && incident?.assignedTo !== null
@@ -278,6 +279,25 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
           />
         </View>
 
+        {/* Evidence & Attachments (if uploaded) */}
+        {incident.attachments && incident.attachments.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>
+              Evidence & Attachments ({incident.attachments.length})
+            </Text>
+            <Card variant="elevated">
+              {incident.attachments.map((url, idx) => (
+                <View key={idx} style={styles.attachmentItem}>
+                  <AppIcon icon={File01Icon} size="xs" color={Colors.primaryLight} />
+                  <Text numberOfLines={1} style={styles.attachmentText}>
+                    {url.split('/').pop() || `Attachment ${idx + 1}`}
+                  </Text>
+                </View>
+              ))}
+            </Card>
+          </>
+        )}
+
         {/* Resolution Notes (if closed) */}
         {incident.resolutionNotes && (
           <>
@@ -298,8 +318,12 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
             incident.notes.map((n, idx) => (
               <View key={n._id || idx} style={styles.noteBox}>
                 <Text style={styles.noteMeta}>
-                  {typeof n.author === 'object' && n.author !== null ? (n.author as any).name : 'Operator'} •{' '}
-                  {formatDateTime(n.createdAt)}
+                  {typeof n.author === 'object' && n.author !== null
+                    ? (n.author as any).name
+                    : typeof n.author === 'string' && n.author.trim() !== ''
+                    ? n.author
+                    : 'Operator'}{' '}
+                  • {formatDateTime(n.createdAt)}
                 </Text>
                 <Text style={styles.noteText}>{n.text}</Text>
               </View>
@@ -327,23 +351,21 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
           <View style={styles.actionContainer}>
             {incident.status === 'open' && (
               <Button
-                title={isAssignedToMe ? "Start Investigation" : "Assign to Me to Investigate"}
+                title={isAssignedToMe ? "Start Investigation" : "Assign to Me & Investigate"}
                 variant="primary"
                 loading={actionLoading}
                 onPress={() => handleStatusUpdate('investigating')}
                 style={styles.actionBtn}
-                disabled={!isAssignedToMe}
               />
             )}
 
             {incident.status === 'investigating' && (
               <Button
-                title={isAssignedToMe ? "Mark as Resolved" : "Assign to Me to Resolve"}
+                title={isAssignedToMe ? "Mark as Resolved" : "Assign to Me & Resolve"}
                 variant="primary"
                 loading={actionLoading}
                 onPress={() => handleStatusUpdate('resolved')}
                 style={styles.actionBtn}
-                disabled={!isAssignedToMe}
               />
             )}
 
@@ -494,6 +516,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginTop: 18,
     marginBottom: 8,
+  },
+  attachmentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.surfaceElevated,
+  },
+  attachmentText: {
+    fontSize: 13,
+    color: Colors.primaryLight,
+    fontWeight: '600',
+    marginLeft: 8,
+    flex: 1,
   },
   resNotes: {
     fontSize: 14,
