@@ -1,5 +1,6 @@
 import { apiClient } from '../client';
 import { SOSAlert, SOSNote, SOSTimelineEntry } from '../../types/sos.types';
+import { buildQueryString } from '../../utils/query';
 
 export const SOSApi = {
   getSosAlerts: async (params?: {
@@ -7,8 +8,7 @@ export const SOSApi = {
     limit?: number;
     status?: string;
   }): Promise<{ alerts: SOSAlert[]; total: number }> => {
-    const query = new URLSearchParams(params as any).toString();
-    const response = await apiClient.get(`/sos${query ? `?${query}` : ''}`);
+    const response = await apiClient.get(`/sos${buildQueryString(params)}`);
     return {
       alerts: response.data.data.alerts || response.data.data || [],
       total: response.data.data.total || 0,

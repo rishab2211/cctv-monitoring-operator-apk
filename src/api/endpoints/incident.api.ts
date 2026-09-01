@@ -5,6 +5,7 @@ import {
   IncidentReportResponse,
   IncidentTimelineEntry,
 } from '../../types/incident.types';
+import { buildQueryString } from '../../utils/query';
 
 export const IncidentApi = {
   getIncidents: async (params?: {
@@ -13,8 +14,7 @@ export const IncidentApi = {
     status?: string;
     severity?: string;
   }): Promise<{ incidents: Incident[]; total: number }> => {
-    const query = new URLSearchParams(params as any).toString();
-    const response = await apiClient.get(`/incidents${query ? `?${query}` : ''}`);
+    const response = await apiClient.get(`/incidents${buildQueryString(params)}`);
     return {
       incidents: response.data.data.incidents || response.data.data || [],
       total: response.data.data.total || 0,

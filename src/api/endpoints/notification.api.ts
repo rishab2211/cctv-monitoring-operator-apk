@@ -4,6 +4,7 @@ import {
   NotificationPreferences,
   RegisterDevicePayload,
 } from '../../types/notification.types';
+import { buildQueryString } from '../../utils/query';
 
 export const NotificationApi = {
   registerDevice: async (payload: RegisterDevicePayload): Promise<void> => {
@@ -15,8 +16,7 @@ export const NotificationApi = {
     limit?: number;
     isRead?: boolean;
   }): Promise<{ notifications: NotificationItem[]; total: number }> => {
-    const query = new URLSearchParams(params as any).toString();
-    const response = await apiClient.get(`/notifications${query ? `?${query}` : ''}`);
+    const response = await apiClient.get(`/notifications${buildQueryString(params)}`);
     return {
       notifications: response.data.data.notifications || response.data.data || [],
       total: response.data.data.total || 0,

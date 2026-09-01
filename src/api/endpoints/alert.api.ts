@@ -1,5 +1,6 @@
 import { apiClient } from '../client';
 import { Alert, AlertStats } from '../../types/alert.types';
+import { buildQueryString } from '../../utils/query';
 
 export const AlertApi = {
   getAlerts: async (params?: {
@@ -9,8 +10,7 @@ export const AlertApi = {
     priority?: string;
     type?: string;
   }): Promise<{ alerts: Alert[]; total: number }> => {
-    const query = new URLSearchParams(params as any).toString();
-    const response = await apiClient.get(`/alerts${query ? `?${query}` : ''}`);
+    const response = await apiClient.get(`/alerts${buildQueryString(params)}`);
     return {
       alerts: response.data.data.alerts || response.data.data || [],
       total: response.data.data.total || 0,
