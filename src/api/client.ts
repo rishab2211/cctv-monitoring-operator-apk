@@ -34,13 +34,19 @@ export const apiClient = axios.create({
   },
 });
 
-// Request Interceptor: Attach Access Token
+// Request Interceptor: Attach Access Token & Dynamic Content-Type
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const { accessToken } = await StorageService.getTokens();
     if (accessToken && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
+
+    // When sending FormData, let the runtime set multipart/form-data with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

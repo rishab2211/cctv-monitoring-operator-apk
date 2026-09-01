@@ -39,7 +39,7 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
 
-  const loadCameras = async () => {
+  const loadCameras = React.useCallback(async () => {
     try {
       const data = await OperatorApi.getAssignedCameras();
       dispatch(setCameras(data));
@@ -51,11 +51,11 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
     } catch (e) {
       console.warn('[CameraList] Failed to load cameras:', getApiErrorMessage(e));
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     loadCameras();
-  }, []);
+  }, [loadCameras]);
 
   const onRefresh = async () => {
     setRefreshing(true);

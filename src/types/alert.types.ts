@@ -28,5 +28,7 @@ export interface AlertStats {
   total: number;
   pending: number;
   acknowledged: number;
+  escalated?: number;
   resolved: number;
 }
+

@@ -47,7 +47,7 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
   const [chunks, setChunks] = useState<RecordingChunk[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const loadRecordings = async () => {
+  const loadRecordings = React.useCallback(async () => {
     setLoading(true);
     try {
       const timeline = await CameraApi.getRecordingTimeline(cameraId, selectedDate);
@@ -62,11 +62,11 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
     } finally {
       setLoading(false);
     }
-  };
+  }, [cameraId, selectedDate]);
 
   useEffect(() => {
     loadRecordings();
-  }, [cameraId, selectedDate]);
+  }, [cameraId, selectedDate, loadRecordings]);
 
   const handleDownload = async (recordingId: string) => {
     try {

@@ -75,10 +75,22 @@ export const RootNavigator: React.FC = () => {
                 // Non-critical if franchise lookup fails
               }
             }
+          } else {
+            console.warn('[Bootstrap] Account is not an operator. Clearing stored session.');
+            await StorageService.clearTokens();
+            socketService.disconnect();
+            dispatch(logout());
           }
         }
-      } catch (err) {
-        console.log('[Bootstrap] Stored session invalid or expired:', err);
+      } catch (err: any) {
+        console.log('[Bootstrap] Stored session validation error:', err);
+        const status = err.response?.status;
+        // Only clear tokens if the backend explicitly rejects the credentials with 401/403
+        if (status === 401 || status === 403) {
+          await StorageService.clearTokens();
+          socketService.disconnect();
+          dispatch(logout());
+        }
       } finally {
         setInitializing(false);
       }

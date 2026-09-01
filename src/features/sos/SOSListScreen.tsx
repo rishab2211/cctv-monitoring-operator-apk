@@ -36,7 +36,7 @@ export const SOSListScreen: React.FC<SOSListScreenProps> = ({ navigation }) => {
   const [allSosList, setAllSosList] = useState<SOSAlert[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadSOS = async () => {
+  const loadSOS = React.useCallback(async () => {
     try {
       const [active, history] = await Promise.all([
         SOSApi.getActiveSosAlerts(),
@@ -47,7 +47,7 @@ export const SOSListScreen: React.FC<SOSListScreenProps> = ({ navigation }) => {
     } catch (e) {
       console.warn('[SOSList] Error loading SOS alerts:', e);
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     loadSOS();
@@ -67,7 +67,7 @@ export const SOSListScreen: React.FC<SOSListScreenProps> = ({ navigation }) => {
       unsubAck();
       unsubResolved();
     };
-  }, []);
+  }, [loadSOS]);
 
   const onRefresh = async () => {
     setRefreshing(true);

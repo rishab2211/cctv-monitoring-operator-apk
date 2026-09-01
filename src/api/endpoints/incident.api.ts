@@ -27,11 +27,7 @@ export const IncidentApi = {
   },
 
   createIncident: async (formData: FormData): Promise<Incident> => {
-    const response = await apiClient.post('/incidents', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await apiClient.post('/incidents', formData);
     return response.data.data.incident;
   },
 
@@ -49,11 +45,7 @@ export const IncidentApi = {
   },
 
   uploadMedia: async (incidentId: string, formData: FormData): Promise<string[]> => {
-    const response = await apiClient.post(`/incidents/${incidentId}/media`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await apiClient.post(`/incidents/${incidentId}/media`, formData);
     return response.data.data.attachments;
   },
 

@@ -43,7 +43,7 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
   const [activeTab, setActiveTab] = useState<'pending' | 'active'>('pending');
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadAlerts = async () => {
+  const loadAlerts = React.useCallback(async () => {
     try {
       const [pending, active] = await Promise.all([
         OperatorApi.getPendingAlerts(),
@@ -54,7 +54,7 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
     } catch (e) {
       console.warn('[AlertList] Error loading alerts:', e);
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     loadAlerts();
@@ -78,7 +78,7 @@ export const AlertListScreen: React.FC<AlertListScreenProps> = ({ navigation }) 
       unsubResolved();
       unsubEscalated();
     };
-  }, []);
+  }, [loadAlerts]);
 
   const onRefresh = async () => {
     setRefreshing(true);

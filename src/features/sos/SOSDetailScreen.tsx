@@ -56,7 +56,7 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
   const [resolveModalVisible, setResolveModalVisible] = useState(false);
   const [resolutionNotes, setResolutionNotes] = useState('');
 
-  const loadSos = async () => {
+  const loadSos = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await SOSApi.getSosById(sosId);
@@ -66,11 +66,11 @@ export const SOSDetailScreen: React.FC<SOSDetailScreenProps> = ({ navigation, ro
     } finally {
       setLoading(false);
     }
-  };
+  }, [sosId]);
 
   useEffect(() => {
     loadSos();
-  }, [sosId]);
+  }, [sosId, loadSos]);
 
   const handleAcknowledge = async () => {
     setActionLoading(true);

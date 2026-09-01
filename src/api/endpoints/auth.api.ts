@@ -72,12 +72,8 @@ export const AuthApi = {
   },
 
   uploadAvatar: async (formData: FormData): Promise<string> => {
-    const response = await apiClient.put('/users/profile/avatar', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data.data.user.avatar;
+    const response = await apiClient.put('/users/profile/avatar', formData);
+    return response.data.data.user?.avatar || response.data.data.avatar || response.data.data;
   },
 
   getFranchiseDetails: async (franchiseId: string): Promise<{ _id: string; name: string }> => {

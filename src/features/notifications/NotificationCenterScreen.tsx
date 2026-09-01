@@ -35,18 +35,18 @@ export const NotificationCenterScreen: React.FC<NotificationCenterScreenProps> =
   const { notifications, unreadCount } = useSelector((state: RootState) => state.notification);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadNotifications = async () => {
+  const loadNotifications = React.useCallback(async () => {
     try {
       const data = await NotificationApi.getNotifications({ page: 1, limit: 40 });
       dispatch(setNotifications(data.notifications));
     } catch (e) {
       console.warn('[Notifications] Failed to load notifications:', getApiErrorMessage(e));
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [loadNotifications]);
 
   const onRefresh = async () => {
     setRefreshing(true);

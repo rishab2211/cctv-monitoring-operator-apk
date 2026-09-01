@@ -48,7 +48,7 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
     lastPing: reduxCamera?.health?.lastPing || null,
   });
 
-  const loadCamera = async () => {
+  const loadCamera = React.useCallback(async () => {
     try {
       const fetched = await CameraApi.getCameraById(cameraId);
       setCamera(fetched);
@@ -60,13 +60,13 @@ export const CameraDetailScreen: React.FC<CameraDetailScreenProps> = ({ route, n
     } finally {
       setLoading(false);
     }
-  };
+  }, [cameraId]);
 
   useEffect(() => {
     loadCamera();
     const interval = setInterval(loadCamera, 15000); // 15-second telemetry polling
     return () => clearInterval(interval);
-  }, [cameraId]);
+  }, [cameraId, loadCamera]);
 
   if (loading) {
     return (

@@ -24,7 +24,11 @@ import { StatusPill } from '../../components/common/StatusPill';
 import { Button } from '../../components/common/Button';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AlertApi } from '../../api/endpoints/alert.api';
-import { alertAcknowledgedSuccess, alertResolvedSuccess } from '../../store/slices/alertSlice';
+import {
+  alertAcknowledgedSuccess,
+  alertEscalatedSuccess,
+  alertResolvedSuccess,
+} from '../../store/slices/alertSlice';
 import { Alert as AlertType } from '../../types/alert.types';
 import { formatDateTime } from '../../utils/date';
 import { getApiErrorMessage } from '../../utils/error';
@@ -51,7 +55,7 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [isVerifiedCheck, setIsVerifiedCheck] = useState(false);
 
-  const loadAlert = async () => {
+  const loadAlert = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await AlertApi.getAlertById(alertId);
@@ -61,11 +65,11 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
     } finally {
       setLoading(false);
     }
-  };
+  }, [alertId]);
 
   useEffect(() => {
     loadAlert();
-  }, [alertId]);
+  }, [alertId, loadAlert]);
 
   const handleAcknowledge = async () => {
     setActionLoading(true);
@@ -75,7 +79,7 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
       dispatch(alertAcknowledgedSuccess(updated));
       Alert.alert('Acknowledged', 'Alert status moved to Active investigation.');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Could not acknowledge alert.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not acknowledge alert.'));
     } finally {
       setActionLoading(false);
     }
@@ -92,9 +96,10 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
           try {
             const updated = await AlertApi.escalateAlert(alertId);
             setAlert(updated);
+            dispatch(alertEscalatedSuccess(updated));
             Alert.alert('Escalated', 'Alert status updated to Escalated.');
           } catch (e: any) {
-            Alert.alert('Error', e.response?.data?.message || 'Could not escalate alert.');
+            Alert.alert('Error', getApiErrorMessage(e, 'Could not escalate alert.'));
           } finally {
             setActionLoading(false);
           }
@@ -120,7 +125,7 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
       setResolveModalVisible(false);
       Alert.alert('Resolved', 'Alert marked as resolved.');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Could not resolve alert.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not resolve alert.'));
     } finally {
       setActionLoading(false);
     }
@@ -133,7 +138,7 @@ export const AlertDetailScreen: React.FC<AlertDetailScreenProps> = ({ navigation
       setAlert(updated);
       Alert.alert('Verified', 'Alert has been formally verified.');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Could not verify alert.');
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not verify alert.'));
     } finally {
       setActionLoading(false);
     }

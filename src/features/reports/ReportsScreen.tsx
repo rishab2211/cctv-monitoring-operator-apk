@@ -35,7 +35,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadReports = async () => {
+  const loadReports = React.useCallback(async () => {
     try {
       const [reportsData, kpisData] = await Promise.all([
         OperatorApi.getReports(),
@@ -53,11 +53,11 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?._id]);
 
   useEffect(() => {
     loadReports();
-  }, []);
+  }, [loadReports]);
 
   const onRefresh = async () => {
     setRefreshing(true);

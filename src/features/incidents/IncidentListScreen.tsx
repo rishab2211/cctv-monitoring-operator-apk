@@ -34,7 +34,7 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
   const [statusFilter, setStatusFilter] = useState<'all' | IncidentStatus>('all');
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadIncidents = async () => {
+  const loadIncidents = React.useCallback(async () => {
     try {
       const data = await IncidentApi.getIncidents({
         page: 1,
@@ -45,11 +45,11 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
     } catch (e) {
       console.warn('[IncidentList] Error loading incidents:', e);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     loadIncidents();
-  }, [statusFilter]);
+  }, [statusFilter, loadIncidents]);
 
   const onRefresh = async () => {
     setRefreshing(true);

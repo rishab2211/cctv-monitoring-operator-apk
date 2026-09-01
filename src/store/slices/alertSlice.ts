@@ -53,6 +53,16 @@ export const alertSlice = createSlice({
         state.stats.acknowledged += 1;
       }
     },
+    alertEscalatedSuccess: (state, action: PayloadAction<Alert>) => {
+      state.pendingAlerts = state.pendingAlerts.filter((a) => a._id !== action.payload._id);
+      state.activeAlerts = [action.payload, ...state.activeAlerts.filter((a) => a._id !== action.payload._id)];
+      if (state.stats) {
+        state.stats.pending = Math.max(0, state.stats.pending - 1);
+        if (state.stats.escalated !== undefined) {
+          state.stats.escalated += 1;
+        }
+      }
+    },
     alertResolvedSuccess: (state, action: PayloadAction<string>) => {
       state.pendingAlerts = state.pendingAlerts.filter((a) => a._id !== action.payload);
       state.activeAlerts = state.activeAlerts.filter((a) => a._id !== action.payload);
@@ -70,6 +80,7 @@ export const {
   setAlertStats,
   addNewAlertRealtime,
   alertAcknowledgedSuccess,
+  alertEscalatedSuccess,
   alertResolvedSuccess,
 } = alertSlice.actions;
 
