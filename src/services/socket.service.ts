@@ -7,6 +7,7 @@ type EventHandler = (data: any) => void;
 class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<EventHandler>> = new Map();
+  private attachedSocketEvents: Set<string> = new Set();
   private joinedRooms: Set<string> = new Set();
   private currentUserId: string | null = null;
 
@@ -15,6 +16,13 @@ class SocketService {
    */
   async connect(userId?: string, franchiseId?: string | null): Promise<void> {
     if (this.socket?.connected) {
+      if (franchiseId) {
+        this.joinRoom(`franchise_${franchiseId}`);
+      }
+      if (userId && userId !== this.currentUserId) {
+        this.currentUserId = userId;
+        this.setupUserNotifications(userId);
+      }
       return;
     }
 
@@ -35,6 +43,8 @@ class SocketService {
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,
     });
+
+    this.attachedSocketEvents.clear();
 
     this.socket.on('connect', () => {
       console.log('[SocketService] Connected to WebSocket server');
@@ -65,29 +75,56 @@ class SocketService {
   private setupInternalListeners() {
     if (!this.socket) return;
 
-    const events = [
+    const standardEvents = [
       'new_alert',
+      'alert_acknowledged',
+      'alert_resolved',
+      'alert_escalated',
       'sos_triggered',
       'sos_acknowledged',
       'sos_resolved',
       'shift_handover',
       'talkback_started',
       'talkback_stopped',
+      'camera_status',
+      'incident_created',
+      'incident_updated',
     ];
 
-    events.forEach((event) => {
-      this.socket?.on(event, (data) => {
-        this.notifyListeners(event, data);
-      });
+    standardEvents.forEach((event) => {
+      this.attachSocketListener(event);
+    });
+
+    // Re-attach any custom events already registered by UI listeners
+    this.listeners.forEach((_, event) => {
+      this.attachSocketListener(event);
     });
 
     // User-specific notification event
     if (this.currentUserId) {
-      this.socket.on(`notification:${this.currentUserId}`, (data) => {
-        this.notifyListeners(`notification:${this.currentUserId}`, data);
+      this.setupUserNotifications(this.currentUserId);
+    }
+  }
+
+  private setupUserNotifications(userId: string) {
+    if (!this.socket) return;
+    const userNotifEvent = `notification:${userId}`;
+    if (!this.attachedSocketEvents.has(userNotifEvent)) {
+      this.attachedSocketEvents.add(userNotifEvent);
+      this.socket.on(userNotifEvent, (data) => {
+        this.notifyListeners(userNotifEvent, data);
         this.notifyListeners('user_notification', data);
       });
     }
+  }
+
+  private attachSocketListener(event: string) {
+    if (!this.socket || this.attachedSocketEvents.has(event)) return;
+
+    this.attachedSocketEvents.add(event);
+    this.socket.on(event, (data) => {
+      this.notifyListeners(event, data);
+    });
   }
 
   /**
@@ -133,6 +170,11 @@ class SocketService {
     }
     this.listeners.get(event)!.add(handler);
 
+    // Dynamically hook into the live socket if connected
+    if (this.socket) {
+      this.attachSocketListener(event);
+    }
+
     // Return unsubscribe function
     return () => {
       this.listeners.get(event)?.delete(handler);
@@ -153,17 +195,35 @@ class SocketService {
   }
 
   /**
-   * Disconnect socket and clear listeners
+   * Check if socket is currently connected
    */
-  disconnect() {
+  isConnected(): boolean {
+    return !!(this.socket?.connected);
+  }
+
+  /**
+   * Clear all registered event listeners
+   */
+  clearListeners() {
+    this.listeners.clear();
+  }
+
+  /**
+   * Disconnect socket connection
+   */
+  disconnect(clearListeners: boolean = false) {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
     }
     this.joinedRooms.clear();
-    this.listeners.clear();
+    this.attachedSocketEvents.clear();
+    if (clearListeners) {
+      this.listeners.clear();
+    }
     this.currentUserId = null;
   }
 }
 
 export const socketService = new SocketService();
+
