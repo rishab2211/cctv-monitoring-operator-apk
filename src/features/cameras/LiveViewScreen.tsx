@@ -45,11 +45,24 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
+  const isMutedRef = useRef(isMuted);
 
-  const initializeWebRTC = async () => {
+  // Keep isMutedRef in sync with state
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+    if (remoteStream) {
+      remoteStream.getAudioTracks().forEach((track: any) => {
+        track.enabled = !isMuted;
+      });
+    }
+  }, [isMuted, remoteStream]);
+
+  const initializeWebRTC = React.useCallback(async () => {
     try {
       setLoading(true);
       setErrorMsg(null);
+      setRemoteStream(null);
+      setStreamUrl(null);
 
       // Clean up previous connection if retrying
       if (sessionIdRef.current) {
@@ -75,14 +88,20 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
 
       (pc as any).ontrack = (event: any) => {
         if (event.streams && event.streams[0]) {
+          const stream = event.streams[0];
+          // Ensure newly arrived audio tracks match current mute state
+          stream.getAudioTracks().forEach((track: any) => {
+            track.enabled = !isMutedRef.current;
+          });
+
           if (isMountedRef.current) {
-            setRemoteStream(event.streams[0]);
-            setStreamUrl(event.streams[0].toURL());
+            setRemoteStream(stream);
+            setStreamUrl(stream.toURL());
           }
         }
       };
 
-      // Add transceiver for receiving video
+      // Add transceiver for receiving video and audio
       pc.addTransceiver('video', { direction: 'recvonly' });
       pc.addTransceiver('audio', { direction: 'recvonly' });
 
@@ -109,7 +128,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  };
+  }, [cameraId]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -126,7 +145,19 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
         peerConnection.current = null;
       }
     };
-  }, [cameraId]);
+  }, [cameraId, initializeWebRTC]);
+
+  const handleToggleMute = () => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      if (remoteStream) {
+        remoteStream.getAudioTracks().forEach((track: any) => {
+          track.enabled = !next;
+        });
+      }
+      return next;
+    });
+  };
 
   const handleSnapshot = async () => {
     try {
@@ -202,7 +233,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
       <View style={styles.bottomOverlay}>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => setIsMuted(!isMuted)}
+          onPress={handleToggleMute}
           style={[styles.bottomBtn, isMuted ? { backgroundColor: Colors.critical } : {}]}
         >
           <AppIcon
@@ -317,11 +348,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  controlIcon: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '800',
   },
   streamInfo: {
     flex: 1,
