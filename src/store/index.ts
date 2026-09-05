@@ -9,7 +9,7 @@ import alertReducer from './slices/alertSlice';
 import sosReducer from './slices/sosSlice';
 import notificationReducer from './slices/notificationSlice';
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   auth: authReducer,
   shift: shiftReducer,
   camera: cameraReducer,
@@ -18,6 +18,15 @@ const rootReducer = combineReducers({
   notification: notificationReducer,
 });
 
+export const rootReducer = (state: any, action: any) => {
+  if (action.type === 'auth/logout') {
+    // Purge persisted storage on logout to avoid cross-user state leaks
+    AsyncStorage.removeItem('persist:root').catch(() => null);
+    state = undefined;
+  }
+  return appReducer(state, action);
+};
+
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
@@ -25,6 +34,7 @@ const persistConfig = {
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
+
 
 export const store = configureStore({
   reducer: persistedReducer,

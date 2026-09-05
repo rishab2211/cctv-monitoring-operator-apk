@@ -44,7 +44,6 @@ export const StatusPill: React.FC<StatusPillProps> = ({
         return { bg: 'rgba(16, 185, 129, 0.15)', text: Colors.online, dot: Colors.online };
       case 'offline':
       case 'critical':
-      case 'closed':
         return { bg: 'rgba(239, 68, 68, 0.15)', text: Colors.critical, dot: Colors.critical };
       case 'maintenance':
       case 'high':
@@ -55,6 +54,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({
         return { bg: 'rgba(251, 191, 36, 0.15)', text: Colors.medium, dot: Colors.medium };
       case 'low':
       case 'off_shift':
+      case 'closed':
       default:
         return { bg: 'rgba(148, 163, 184, 0.15)', text: Colors.low, dot: Colors.low };
     }

@@ -1,4 +1,4 @@
-import { formatDuration, formatRelativeTime, formatDateTime } from '../src/utils/date';
+import { formatDuration, formatRelativeTime, formatDateTime, formatDateYMD } from '../src/utils/date';
 
 describe('Date and Duration Utilities', () => {
   describe('formatDuration', () => {
@@ -49,6 +49,18 @@ describe('Date and Duration Utilities', () => {
       const formatted = formatDateTime('2026-08-26T14:30:00.000Z');
       expect(typeof formatted).toBe('string');
       expect(formatted.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('formatDateYMD', () => {
+    it('formats local Date object into YYYY-MM-DD with zero-padding', () => {
+      const date = new Date(2026, 3, 5); // April 5, 2026
+      expect(formatDateYMD(date)).toBe('2026-04-05');
+    });
+
+    it('handles string input correctly', () => {
+      const formatted = formatDateYMD('2026-11-20T10:00:00.000Z');
+      expect(formatted).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
   });
 });

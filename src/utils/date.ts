@@ -37,3 +37,15 @@ export const formatDateTime = (dateString?: string): string => {
     minute: '2-digit',
   });
 };
+
+/**
+ * Format local date as YYYY-MM-DD string without timezone UTC day-shift
+ */
+export const formatDateYMD = (dateInput?: Date | string | number): string => {
+  const d = dateInput ? new Date(dateInput) : new Date();
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+

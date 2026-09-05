@@ -60,6 +60,10 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
   const [closeModalVisible, setCloseModalVisible] = useState(false);
   const [closeNotes, setCloseNotes] = useState('');
 
+  // Resolve Incident Modal
+  const [resolveModalVisible, setResolveModalVisible] = useState(false);
+  const [resolveNotes, setResolveNotes] = useState('');
+
   // Media upload
   const [mediaLoading, setMediaLoading] = useState(false);
 
@@ -92,6 +96,23 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
       const updated = await IncidentApi.updateStatus(incidentId, { status: newStatus });
       setIncident(updated);
       Alert.alert('Status Updated', `Incident status set to ${newStatus}.`);
+    } catch (e: any) {
+      Alert.alert('Error', getApiErrorMessage(e, 'Could not update status.'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResolveIncident = async () => {
+    setActionLoading(true);
+    try {
+      const updated = await IncidentApi.updateStatus(incidentId, {
+        status: 'resolved',
+        resolutionNotes: resolveNotes.trim() || undefined,
+      });
+      setIncident(updated);
+      setResolveModalVisible(false);
+      Alert.alert('Status Updated', 'Incident status set to resolved.');
     } catch (e: any) {
       Alert.alert('Error', getApiErrorMessage(e, 'Could not update status.'));
     } finally {
@@ -364,7 +385,7 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
                 title={isAssignedToMe ? "Mark as Resolved" : "Assign to Me & Resolve"}
                 variant="primary"
                 loading={actionLoading}
-                onPress={() => handleStatusUpdate('resolved')}
+                onPress={() => setResolveModalVisible(true)}
                 style={styles.actionBtn}
               />
             )}
@@ -422,6 +443,44 @@ export const IncidentDetailScreen: React.FC<IncidentDetailScreenProps> = ({
                 variant="destructive"
                 loading={actionLoading}
                 onPress={handleCloseIncident}
+                style={styles.modalBtn}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Resolve Incident Modal */}
+      <Modal visible={resolveModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Resolve Incident</Text>
+            <Text style={styles.modalSub}>
+              Provide resolution findings and actions taken before marking as resolved.
+            </Text>
+
+            <TextInput
+              multiline
+              numberOfLines={4}
+              placeholder="e.g. Dispatched local security team; verified area is secure."
+              placeholderTextColor={Colors.textMuted}
+              style={styles.modalInput}
+              value={resolveNotes}
+              onChangeText={setResolveNotes}
+            />
+
+            <View style={styles.modalBtnRow}>
+              <Button
+                title="Cancel"
+                variant="secondary"
+                onPress={() => setResolveModalVisible(false)}
+                style={styles.modalBtn}
+              />
+              <Button
+                title="Resolve"
+                variant="primary"
+                loading={actionLoading}
+                onPress={handleResolveIncident}
                 style={styles.modalBtn}
               />
             </View>

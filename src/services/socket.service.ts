@@ -60,8 +60,20 @@ class SocketService {
       });
     });
 
-    this.socket.on('connect_error', (error) => {
+    this.socket.on('connect_error', async (error) => {
       console.warn('[SocketService] Connection error:', error.message);
+      const isAuthError =
+        error.message?.includes('token') ||
+        error.message?.includes('auth') ||
+        error.message?.includes('jwt') ||
+        error.message?.includes('unauthorized');
+
+      if (isAuthError) {
+        const { accessToken: freshToken } = await StorageService.getTokens();
+        if (freshToken && this.socket) {
+          this.socket.auth = { token: freshToken };
+        }
+      }
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -71,6 +83,16 @@ class SocketService {
     // Wire up global and standard event broadcasts
     this.setupInternalListeners();
   }
+
+  /**
+   * Update active JWT authentication token on socket instance
+   */
+  updateAuthToken(newToken: string) {
+    if (this.socket) {
+      this.socket.auth = { token: newToken };
+    }
+  }
+
 
   private setupInternalListeners() {
     if (!this.socket) return;

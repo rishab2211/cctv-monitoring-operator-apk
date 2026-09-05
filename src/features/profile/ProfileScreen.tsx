@@ -22,7 +22,7 @@ import {
   SmartPhone01Icon,
   TimelineIcon,
 } from '@hugeicons/core-free-icons';
-import { RootState } from '../../store';
+import { persistor, RootState } from '../../store';
 import { Colors } from '../../theme/colors';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
@@ -49,9 +49,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         text: 'Sign Out',
         style: 'destructive',
         onPress: async () => {
-          await AuthApi.logout();
+          try {
+            await AuthApi.logout();
+          } catch {
+            // Proceed with client cleanup
+          }
           await StorageService.clearTokens();
           socketService.disconnect();
+          try {
+            await persistor.purge();
+          } catch {
+            // Persistor purge fallback
+          }
           dispatch(logout());
         },
       },
@@ -65,7 +74,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         allowMultiSelection: false,
       });
       const result = results[0];
-      
+
       const formData = new FormData();
       formData.append('avatar', {
         uri: result.uri,
@@ -75,9 +84,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       setAvatarLoading(true);
       const newAvatarUrl = await AuthApi.uploadAvatar(formData);
-      
+
       if (user) {
-        dispatch(setUser({ ...user, avatar: newAvatarUrl }));
+        const updatedUser = { ...user, avatar: newAvatarUrl };
+        dispatch(setUser(updatedUser));
+        await StorageService.saveCachedUser(updatedUser);
       }
       Alert.alert('Success', 'Profile picture updated successfully.');
     } catch (err: any) {
@@ -88,6 +99,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       setAvatarLoading(false);
     }
   };
+
 
   const renderSettingItem = (
     icon: IconSvgElement,

@@ -22,6 +22,7 @@ import { Header } from '../../components/common/Header';
 import { StatusPill } from '../../components/common/StatusPill';
 import { AppIcon } from '../../components/common/AppIcon';
 import { IncidentApi } from '../../api/endpoints/incident.api';
+import { socketService } from '../../services/socket.service';
 import { Incident, IncidentStatus } from '../../types/incident.types';
 import { formatRelativeTime } from '../../utils/date';
 
@@ -49,7 +50,19 @@ export const IncidentListScreen: React.FC<IncidentListScreenProps> = ({ navigati
 
   useEffect(() => {
     loadIncidents();
-  }, [statusFilter, loadIncidents]);
+
+    const handleIncidentEvent = () => {
+      loadIncidents();
+    };
+
+    socketService.on('incident_created', handleIncidentEvent);
+    socketService.on('incident_updated', handleIncidentEvent);
+
+    return () => {
+      socketService.off('incident_created', handleIncidentEvent);
+      socketService.off('incident_updated', handleIncidentEvent);
+    };
+  }, [loadIncidents]);
 
   const onRefresh = async () => {
     setRefreshing(true);

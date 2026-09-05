@@ -24,7 +24,7 @@ import { StatusPill } from '../../components/common/StatusPill';
 import { AppIcon } from '../../components/common/AppIcon';
 import { OperatorApi } from '../../api/endpoints/operator.api';
 import { socketService } from '../../services/socket.service';
-import { setCameras, setSelectedCamera, setStatusFilter } from '../../store/slices/cameraSlice';
+import { setCameras, setSelectedCamera, setStatusFilter, updateCameraStatus } from '../../store/slices/cameraSlice';
 import { Camera, CameraStatus } from '../../types/camera.types';
 import { getApiErrorMessage } from '../../utils/error';
 
@@ -55,7 +55,19 @@ export const CameraListScreen: React.FC<CameraListScreenProps> = ({ navigation }
 
   useEffect(() => {
     loadCameras();
-  }, [loadCameras]);
+
+    const handleCameraStatus = (payload: { cameraId?: string; id?: string; status: CameraStatus }) => {
+      const targetId = payload.cameraId || payload.id;
+      if (targetId && payload.status) {
+        dispatch(updateCameraStatus({ cameraId: targetId, status: payload.status }));
+      }
+    };
+
+    socketService.on('camera_status', handleCameraStatus);
+    return () => {
+      socketService.off('camera_status', handleCameraStatus);
+    };
+  }, [loadCameras, dispatch]);
 
   const onRefresh = async () => {
     setRefreshing(true);

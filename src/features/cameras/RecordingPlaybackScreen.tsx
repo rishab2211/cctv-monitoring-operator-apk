@@ -22,6 +22,7 @@ import { AppIcon } from '../../components/common/AppIcon';
 import { CameraApi } from '../../api/endpoints/camera.api';
 import { RecordingChunk, RecordingTimelineItem } from '../../types/camera.types';
 import { getApiErrorMessage } from '../../utils/error';
+import { formatDateYMD } from '../../utils/date';
 
 interface RecordingPlaybackScreenProps {
   navigation: any;
@@ -39,8 +40,8 @@ export const RecordingPlaybackScreen: React.FC<RecordingPlaybackScreenProps> = (
 }) => {
   const { cameraId, cameraName } = route.params;
 
-  const today = new Date().toISOString().split('T')[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const today = formatDateYMD(new Date());
+  const yesterday = formatDateYMD(new Date(Date.now() - 86400000));
 
   const [selectedDate, setSelectedDate] = useState(today);
   const [timelineItems, setTimelineItems] = useState<RecordingTimelineItem[]>([]);

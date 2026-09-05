@@ -1,8 +1,20 @@
-import { getMessaging, getToken, requestPermission, onTokenRefresh, AuthorizationStatus } from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  getToken,
+  requestPermission,
+  onTokenRefresh,
+  onMessage,
+  AuthorizationStatus,
+} from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
 import { NotificationApi } from '../api/endpoints/notification.api';
+import { store } from '../store';
+import { addNotificationRealtime } from '../store/slices/notificationSlice';
 
 class FCMService {
+  private unsubscribeOnMessage: (() => void) | null = null;
+  private unsubscribeTokenRefresh: (() => void) | null = null;
+
   public async init() {
     try {
       const messaging = getMessaging();
@@ -17,9 +29,33 @@ class FCMService {
         await this.registerDevice(token);
 
         // Listen for token refresh
-        onTokenRefresh(messaging, (newToken: string) => {
+        if (this.unsubscribeTokenRefresh) {
+          this.unsubscribeTokenRefresh();
+        }
+        this.unsubscribeTokenRefresh = onTokenRefresh(messaging, (newToken: string) => {
           console.log('[FCMService] Token Refreshed:', newToken);
           this.registerDevice(newToken);
+        });
+
+        // Listen for foreground push notifications
+        if (this.unsubscribeOnMessage) {
+          this.unsubscribeOnMessage();
+        }
+        this.unsubscribeOnMessage = onMessage(messaging, async (remoteMessage: any) => {
+          console.log('[FCMService] Foreground message received:', remoteMessage);
+          if (remoteMessage) {
+            const notifItem = {
+              _id: remoteMessage.messageId || Date.now().toString(),
+              userId: '',
+              type: (remoteMessage.data?.type as any) || 'alert',
+              title: remoteMessage.notification?.title || remoteMessage.data?.title || 'New Notification',
+              body: remoteMessage.notification?.body || remoteMessage.data?.body || '',
+              data: remoteMessage.data || {},
+              isRead: false,
+              createdAt: new Date().toISOString(),
+            };
+            store.dispatch(addNotificationRealtime(notifItem));
+          }
         });
       } else {
         console.warn('[FCMService] User declined notifications.');
@@ -47,3 +83,4 @@ class FCMService {
 }
 
 export const fcmService = new FCMService();
+

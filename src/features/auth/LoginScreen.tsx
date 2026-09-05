@@ -20,7 +20,7 @@ import { AuthApi } from '../../api/endpoints/auth.api';
 import { StorageService } from '../../services/storage.service';
 import { socketService } from '../../services/socket.service';
 import { fcmService } from '../../services/fcm.service';
-import { loginSuccess, setError, setLoading } from '../../store/slices/authSlice';
+import { loginSuccess, setError, setFranchiseName, setLoading } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 import { getApiErrorMessage } from '../../utils/error';
 
@@ -68,9 +68,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       await socketService.connect(data.user._id, franchiseId);
       fcmService.init().catch((e) => console.log('[Login] FCM init error:', e));
 
+      // Resolve franchise name for dashboard & profile display
+      if (franchiseId) {
+        try {
+          const franchise = await AuthApi.getFranchiseDetails(franchiseId);
+          if (franchise?.name) {
+            dispatch(setFranchiseName(franchise.name));
+          }
+        } catch {
+          // Non-critical if franchise lookup fails
+        }
+      }
+
       // Update Redux state
       dispatch(loginSuccess({ user: data.user }));
     } catch (err: any) {
+
       const errorMsg = getApiErrorMessage(
         err,
         'Login failed. Please verify credentials.'

@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ENV } from '../config/env';
 import { StorageService } from '../services/storage.service';
+import { socketService } from '../services/socket.service';
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -15,7 +16,7 @@ export const setOnUnauthorizedCallback = (callback: () => void) => {
 };
 
 const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -44,7 +45,11 @@ apiClient.interceptors.request.use(
 
     // When sending FormData, let the runtime set multipart/form-data with boundary
     if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
+      if (typeof (config.headers as any)?.delete === 'function') {
+        (config.headers as any).delete('Content-Type');
+      } else if (config.headers) {
+        delete config.headers['Content-Type'];
+      }
     }
 
     return config;
@@ -95,10 +100,17 @@ apiClient.interceptors.response.use(
         refreshToken,
       });
 
-      const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
+      const responseData = response.data?.data || response.data;
+      const newAccessToken = responseData?.accessToken;
+      const newRefreshToken = responseData?.refreshToken || refreshToken;
+
+      if (!newAccessToken) {
+        throw new Error('Invalid token refresh response structure');
+      }
 
       // Save rotated tokens securely in Keychain
       await StorageService.saveTokens(newAccessToken, newRefreshToken);
+      socketService.updateAuthToken(newAccessToken);
 
       processQueue(null, newAccessToken);
 
@@ -119,3 +131,4 @@ apiClient.interceptors.response.use(
     }
   }
 );
+

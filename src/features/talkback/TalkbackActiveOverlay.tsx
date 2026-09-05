@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { mediaDevices, RTCPeerConnection } from 'react-native-webrtc';
 import { Mic01Icon } from '@hugeicons/core-free-icons';
 import { Colors } from '../../theme/colors';
@@ -32,12 +33,14 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
   navigation,
   route,
 }) => {
+  const insets = useSafeAreaInsets();
   const { cameraId, cameraName } = route.params;
   const { user } = useSelector((state: RootState) => state.auth);
 
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -120,6 +123,33 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
         });
         await pc.setLocalDescription(offer);
 
+        // Relay SDP Offer to MediaMTX WHIP gateway endpoint
+        if (sessionData.whipUrl && offer.sdp) {
+          try {
+            const whipResponse = await fetch(sessionData.whipUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/sdp',
+              },
+              body: offer.sdp,
+            });
+
+            if (whipResponse.ok) {
+              const answerSdp = await whipResponse.text();
+              if (answerSdp && pcRef.current) {
+                await pcRef.current.setRemoteDescription({
+                  type: 'answer',
+                  sdp: answerSdp,
+                });
+              }
+            } else {
+              console.warn('[Talkback] WHIP endpoint responded with status:', whipResponse.status);
+            }
+          } catch (whipErr) {
+            console.warn('[Talkback] WHIP signaling exchange error:', whipErr);
+          }
+        }
+
         if (isMounted) {
           setConnected(true);
           setLoading(false);
@@ -134,6 +164,7 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
           navigation.goBack();
         }
       }
+
     };
 
     startTalkback();
@@ -170,7 +201,15 @@ export const TalkbackActiveOverlay: React.FC<TalkbackActiveOverlayProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: Math.max(insets.top, 24),
+          paddingBottom: Math.max(insets.bottom, 24),
+        },
+      ]}
+    >
       <View style={styles.content}>
         {/* Animated Mic Visualizer */}
         <Animated.View

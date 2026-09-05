@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { RTCPeerConnection, RTCView, MediaStream } from 'react-native-webrtc';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Alert02Icon,
   Camera01Icon,
@@ -35,6 +36,7 @@ interface LiveViewScreenProps {
 
 export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, route }) => {
   const { cameraId, cameraName } = route.params;
+  const insets = useSafeAreaInsets();
 
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -205,7 +207,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
       </View>
 
       {/* Top Controls Overlay */}
-      <View style={styles.topOverlay}>
+      <View style={[styles.topOverlay, { top: Math.max(insets.top + 8, 40) }]}>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => navigation.goBack()}
@@ -230,7 +232,7 @@ export const LiveViewScreen: React.FC<LiveViewScreenProps> = ({ navigation, rout
       </View>
 
       {/* Bottom Controls Overlay */}
-      <View style={styles.bottomOverlay}>
+      <View style={[styles.bottomOverlay, { bottom: Math.max(insets.bottom + 12, 30) }]}>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleToggleMute}

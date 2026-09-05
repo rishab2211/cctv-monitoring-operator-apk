@@ -23,6 +23,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { RootState } from '../../store';
 import { Colors } from '../../theme/colors';
+import { ENV } from '../../config/env';
 import { Card } from '../../components/common/Card';
 import { StatusPill } from '../../components/common/StatusPill';
 import { Button } from '../../components/common/Button';
@@ -133,8 +134,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     };
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
+    // Auto-polling interval while app is foregrounded
+    const pollTimer = setInterval(() => {
+      if (AppState.currentState === 'active') {
+        loadDashboardData();
+      }
+    }, ENV.AUTO_POLL_INTERVAL_MS);
+
     // Socket real-time events
     const unsubAlertNew = socketService.on('new_alert', () => {
+      loadDashboardData();
+    });
+    const unsubAlertAck = socketService.on('alert_acknowledged', () => {
+      loadDashboardData();
+    });
+    const unsubAlertRes = socketService.on('alert_resolved', () => {
+      loadDashboardData();
+    });
+    const unsubAlertEsc = socketService.on('alert_escalated', () => {
       loadDashboardData();
     });
     const unsubSosTriggered = socketService.on('sos_triggered', () => {
@@ -161,7 +178,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
     return () => {
       subscription.remove();
+      clearInterval(pollTimer);
       unsubAlertNew();
+      unsubAlertAck();
+      unsubAlertRes();
+      unsubAlertEsc();
       unsubSosTriggered();
       unsubSosAcknowledged();
       unsubSosResolved();

@@ -5,6 +5,7 @@ import {
   getToken,
   requestPermission,
   onTokenRefresh,
+  onMessage,
   AuthorizationStatus,
 } from '@react-native-firebase/messaging';
 
@@ -64,6 +65,27 @@ describe('FCMService', () => {
           token: 'refreshed-token-456',
         })
       );
+    }
+  });
+
+  it('handles foreground messages and processes them gracefully', async () => {
+    let messageCallback: ((msg: any) => Promise<void>) | null = null;
+    (requestPermission as jest.Mock).mockResolvedValueOnce(AuthorizationStatus.AUTHORIZED);
+    (getToken as jest.Mock).mockResolvedValueOnce('fcm-token-foreground');
+    (onMessage as jest.Mock).mockImplementationOnce((_messaging, cb) => {
+      messageCallback = cb;
+      return jest.fn();
+    });
+
+    await fcmService.init();
+
+    expect(messageCallback).toBeDefined();
+    if (messageCallback) {
+      await (messageCallback as any)({
+        messageId: 'msg-realtime-1',
+        notification: { title: 'Alert Detected', body: 'Camera intrusion' },
+        data: { type: 'alert' },
+      });
     }
   });
 
